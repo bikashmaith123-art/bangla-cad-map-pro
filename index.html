@@ -123,7 +123,7 @@ async function saveProjectFile(project){
  if(window.showSaveFilePicker){try{const h=await window.showSaveFilePicker({suggestedName:safe,types:[{description:'Google Earth KMZ',accept:{'application/vnd.google-earth.kmz':['.kmz']}}]});const w=await h.createWritable();await w.write(blob);await w.close();saveHandle=h;return 'KMZ ফাইলটি আপনার নির্বাচিত লোকেশনে সেভ হয়েছে।'}catch(e){if(e&&e.name==='AbortError')return 'লোকেশন নির্বাচন বাতিল হয়েছে; ব্রাউজারের ভেতরের প্রজেক্ট সেভ রাখা হয়েছে।';throw e}}
  const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=safe;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),5000);return 'KMZ ফাইল ডাউনলোডে পাঠানো হয়েছে। Chrome-এর Downloads সেটিংসে লোকেশন বেছে নেওয়ার ব্যবস্থা চালু থাকলে সেখানে সেভের জায়গা নির্বাচন করুন।'
 }
-$('saveProject').onclick=async()=>{try{flushEdit();if(!maps.length){status.textContent='সেভ করার আগে অন্তত একটি ম্যাপ আপলোড করুন।';return}const name=$('projectName').value.trim()||'নামহীন প্রজেক্ট';projectId=projectId||uid();maps.forEach(m=>{if(m.geo){m.positionFixed=true;m.locked=true}});const p={id:projectId,name,updated:Date.now(),maps};await req('readwrite',s=>s.put(p));refreshProjects();status.textContent=`“${name}” — ${maps.length}টি ম্যাপসহ প্রজেক্ট এই ব্রাউজারে সেভ হয়েছে। KML বা KMZ আলাদা করে ডাউনলোড করতে সংশ্লিষ্ট বোতাম চাপুন।`}catch(e){status.textContent='সেভ করা যায়নি: '+e.message+'। জায়গা কম থাকলে কম ছবি দিয়ে চেষ্টা করুন।'}};
+$('saveProject').onclick=async()=>{try{flushEdit();if(!maps.length){status.textContent='সেভ করার আগে অন্তত একটি ম্যাপ আপলোড করুন।';return}const name=$('projectName').value.trim()||'নামহীন প্রজেক্ট';projectId=projectId||uid();maps.forEach(m=>{if(m.geo){m.positionFixed=true;m.locked=true}});const p={id:projectId,name,updated:Date.now(),maps:maps.map(m=>{const c={...m};delete c.undoStack;return c})};await req('readwrite',s=>s.put(p));refreshProjects();status.textContent=`“${name}” — ${maps.length}টি ম্যাপসহ প্রজেক্ট এই ব্রাউজারে সেভ হয়েছে। KML বা KMZ আলাদা করে ডাউনলোড করতে সংশ্লিষ্ট বোতাম চাপুন।`}catch(e){status.textContent='সেভ করা যায়নি: '+e.message+'। জায়গা কম থাকলে কম ছবি দিয়ে চেষ্টা করুন।'}};
 $('exportProject').onclick=async()=>{let u='';try{flushEdit();if(!maps.length){status.textContent='আগে প্রজেক্টে ম্যাপ যোগ করুন।';return}maps.forEach(m=>{if(m.geo){m.positionFixed=true;m.locked=true}});const p={format:'BanglaCADOverlayProject',version:3,name:$('projectName').value.trim()||'প্রজেক্ট',maps};status.textContent='Google Earth-উপযোগী KMZ তৈরি হচ্ছে…';const bytes=await makeKmz(p),blob=new Blob([bytes],{type:'application/vnd.google-earth.kmz'});u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=(p.name.replace(/[^\p{L}\p{N}_-]+/gu,'_')||'Bangla_CAD_Project')+'.kmz';document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(u)},60000);status.textContent='KMZ তৈরি হয়েছে। অ্যালাইন করা ম্যাপের GroundOverlay ছবিও ফাইলে আছে—Google Earth-এ খোলা যাবে।'}catch(e){if(u)URL.revokeObjectURL(u);status.textContent='KMZ তৈরি/ডাউনলোড করা যায়নি: '+e.message}};
 $('importProject').onclick=()=>$('projectFile').click();
 async function zipEntriesCentral(buffer){
@@ -255,17 +255,18 @@ $('brightness').oninput=()=>{if(selected<0)return;maps[selected].brightness=+$('
 const live=editCanvas;live.id='liveCv';$('imageLayer').appendChild(live);
 function setOp(v){curOp=v;if(liveOn)live.style.opacity=v;else img.style.opacity=v}
 function copyLive(){
-  // Canvas-কে ছবির ঠিক একই স্ক্রিন-আকার/অবস্থানে বসাই, যাতে স্বচ্ছ অংশে
-  // কালো ব্যাকগ্রাউন্ড না এসে নিচের স্যাটেলাইট ম্যাপ দেখা যায়।
-  const r=img.getBoundingClientRect(),p=$('imageLayer').getBoundingClientRect();
+  // Canvas-কে ছবির ঠিক একই অবস্থান, মাপ ও ঘোরানো কোণে বসাই (বাউন্ডিং বক্স নয়),
+  // যাতে অ্যালাইন করা/ঘোরানো ম্যাপে ক্লিনিং শুরু হলে ছবি সরে বা টেনে না যায়।
   live.style.position='absolute';
-  live.style.left=(r.left-p.left)+'px';
-  live.style.top=(r.top-p.top)+'px';
-  live.style.width=r.width+'px';
-  live.style.height=r.height+'px';
+  const cs=getComputedStyle(img);
+  live.style.left=cs.left;
+  live.style.top=cs.top;
+  live.style.width=cs.width;
+  live.style.height=cs.height;
+  live.style.transformOrigin='50% 50%';
+  live.style.transform=cs.transform;
   live.style.maxWidth='none';
   live.style.maxHeight='none';
-  live.style.transform='none';
   live.style.objectFit='fill';
   live.style.padding='0';
   live.style.margin='0';
@@ -290,7 +291,7 @@ function updUndo(){const b=$('undoBtn');if(b)b.textContent='↩ আনডু ('+
 function pushUndo(e){if(!e)return;undoStack.push(e);if(undoStack.length>10)undoStack.shift();updUndo()}
 function snapX(){const m=maps[selected];return m?{t:'x',geo:m.geo?{...m.geo}:undefined,left:m.left,top:m.top,width:m.width,maxWidth:m.maxWidth,maxHeight:m.maxHeight,transform:m.transform,aligned:m.aligned}:null}
 function undoClean(st){if(!editCtx||!st||!st.i||!st.i.length)return;const d=editCtx.getImageData(0,0,editCanvas.width,editCanvas.height),a=d.data;for(let j=0;j<st.i.length;j++)a[st.i[j]*4+3]=st.a[j];editCtx.putImageData(d,0,0)}
-$('undoBtn').onclick=()=>{if(!undoStack.length||selected<0)return;const e=undoStack.pop(),m=maps[selected];updUndo();if(e.t==='full'){if(!editCtx)return;const d=editCtx.getImageData(0,0,editCanvas.width,editCanvas.height);for(let z=0;z<e.data.length;z++)d.data[z*4+3]=e.data[z];editCtx.putImageData(d,0,0);if(!liveOn)startLive();dirty=true;needSwap=true;editVer++;clearTimeout(swapT);commitIdle();status.textContent='এক টাচে রঙের অংশ স্বচ্ছ করে ক্লিয়ার করা আনডু হয়েছে; আগের ছবি ফিরে এসেছে।'}else if(e.t==='c'){if(!editCtx)return;drawing=false;curStroke=null;undoClean(e.s);if(!liveOn)startLive();dirty=true;needSwap=true;editVer++;clearTimeout(swapT);commitIdle();status.textContent='শেষ ব্রাশ/এক-টাচ ক্লিনিং আনডু হয়েছে; আগের ছবি ফিরে এসেছে।'}else{if(e.geo)m.geo=e.geo;else delete m.geo;m.left=e.left;m.top=e.top;m.width=e.width;m.maxWidth=e.maxWidth;m.maxHeight=e.maxHeight;m.transform=e.transform;m.aligned=e.aligned;applySettings();status.textContent='শেষ সরানো/অ্যালাইন আনডু হয়েছে।'}};
+$('undoBtn').onclick=()=>{if(!undoStack.length||selected<0)return;let e;if(maps[selected]?.locked){let k=undoStack.length-1;while(k>=0&&undoStack[k].t==='x')k--;if(k<0){status.textContent='🔒 লক অবস্থায় আনডু করার মতো ক্লিনিং ধাপ নেই।';return}e=undoStack.splice(k,1)[0]}else e=undoStack.pop();const m=maps[selected];updUndo();if(e.t==='full'){if(!editCtx)return;const d=editCtx.getImageData(0,0,editCanvas.width,editCanvas.height);for(let z=0;z<e.data.length;z++)d.data[z*4+3]=e.data[z];editCtx.putImageData(d,0,0);if(!liveOn)startLive();dirty=true;needSwap=true;editVer++;clearTimeout(swapT);commitIdle();status.textContent='এক টাচে রঙের অংশ স্বচ্ছ করে ক্লিয়ার করা আনডু হয়েছে; আগের ছবি ফিরে এসেছে।'}else if(e.t==='c'){if(!editCtx)return;drawing=false;curStroke=null;undoClean(e.s);if(!liveOn)startLive();dirty=true;needSwap=true;editVer++;clearTimeout(swapT);commitIdle();status.textContent='শেষ ব্রাশ/এক-টাচ ক্লিনিং আনডু হয়েছে; আগের ছবি ফিরে এসেছে।'}else{if(e.geo)m.geo=e.geo;else delete m.geo;m.left=e.left;m.top=e.top;m.width=e.width;m.maxWidth=e.maxWidth;m.maxHeight=e.maxHeight;m.transform=e.transform;m.aligned=e.aligned;applySettings();status.textContent='শেষ সরানো/অ্যালাইন আনডু হয়েছে।'}};
 function commitIdle(){if(needSwap&&!drawing&&!bptrs.size&&selected>=0&&editCanvas.width){needSwap=false;commitLive()}}
 const ghostLayer=document.createElement('div');ghostLayer.id='ghostLayer';ghostLayer.style.cssText='position:absolute;inset:0;pointer-events:none';$('imageLayer').insertBefore(ghostLayer,img);
 const ghosts=new Map();
@@ -299,13 +300,14 @@ function ghostPlace(el,m){el.style.transition='none';if(m.geo&&map){const q=m.ge
 function renderGhosts(){const keep=new Set();maps.forEach((m,i)=>{if(i===selected||m.on===false)return;m.id=m.id||uid();keep.add(m.id);let el=ghosts.get(m.id);if(!el){el=document.createElement('img');el.className='ghost';el.dataset.off='1';el.onload=()=>{if(el.naturalWidth)el._asp=el.naturalHeight/el.naturalWidth};ghostLayer.appendChild(el);ghosts.set(m.id,el)}el.style.opacity=(m.opacity??65)/100;el.style.filter=visualFilter(m);el.style.zIndex=String(i+1);el.decoding='async';ghostPlace(el,m)});for(const [id,el] of [...ghosts]){if(!keep.has(id)){el.remove();ghosts.delete(id)}}}
 function syncGhosts(){if(!map)return;for(const m of maps){const el=ghosts.get(m.id);if(el&&m.geo)ghostPlace(el,m)}}
 function toggleVis(i){const m=maps[i];if(!m)return;m.on=(m.on===false);if(i===selected){img.style.display=m.on===false?'none':'block';if(m.on===false)liveOff()}renderGhosts();renderList()}
-function setBrush(v){if(v&&selected>=0&&maps[selected]?.locked){status.textContent='এই ম্যাপটি লক করা আছে। কাজ করতে আগে আনলক করুন।';return}brush=v;phase='idle';$('allBrush').classList.toggle('on',v==='all');$('floodBrush').classList.toggle('on',v==='flood');$('brushOff').classList.toggle('on',!v);pe();if(!v&&needSwap){clearTimeout(swapT);commitIdle()}$('cleanStatus').textContent=v==='all'?'এক আঙুল দিয়ে ঘষুন—সাদা, কালো ও সব রঙের অংশ সত্যিকারের স্বচ্ছ হবে; কালো রঙ আঁকা হবে না, নিচের ম্যাপ দেখা যাবে।':v==='flood'?'সাদা/হালকা রঙের ওপর একবার টাচ করুন। মিল থাকা হালকা অংশ মুছবে; কালো লাইন ও ডট এক টাচে সুরক্ষিত থাকবে। কালো অংশ হাতে ব্রাশ দিয়ে মুছতে পারবেন।':'ব্রাশ বন্ধ। Undo দিয়ে শেষ ক্লিনিং ফিরিয়ে আনতে পারবেন।'}$('allBrush').onclick=()=>{setBrush('all');if(selected>=0&&map&&!maps[selected].geo)anchorNow()};$('brushOff').onclick=()=>setBrush('');$('floodBrush').onclick=()=>setBrush('flood');
+function setBrush(v){brush=v;phase='idle';$('allBrush').classList.toggle('on',v==='all');$('floodBrush').classList.toggle('on',v==='flood');$('brushOff').classList.toggle('on',!v);pe();if(!v&&needSwap){clearTimeout(swapT);commitIdle()}$('cleanStatus').textContent=v==='all'?'এক আঙুল দিয়ে ঘষুন—সাদা, কালো ও সব রঙের অংশ সত্যিকারের স্বচ্ছ হবে; কালো রঙ আঁকা হবে না, নিচের ম্যাপ দেখা যাবে।':v==='flood'?'সাদা/হালকা রঙের ওপর একবার টাচ করুন। মিল থাকা হালকা অংশ মুছবে; কালো লাইন ও ডট এক টাচে সুরক্ষিত থাকবে। কালো অংশ হাতে ব্রাশ দিয়ে মুছতে পারবেন।':'ব্রাশ বন্ধ। Undo দিয়ে শেষ ক্লিনিং ফিরিয়ে আনতে পারবেন।'}$('allBrush').onclick=()=>{setBrush('all');if(selected>=0&&map&&!maps[selected].geo)anchorNow()};$('brushOff').onclick=()=>setBrush('');$('floodBrush').onclick=()=>{setBrush('flood');if(selected>=0&&map&&!maps[selected].geo)anchorNow()};
+function imgLocal(x,y){const g=geom(),q=rot(-g.th,x-g.cx,y-g.cy);return{u:q.x/Math.max(1,g.w)+.5,v:q.y/Math.max(1,g.h)+.5,w:g.w,h:g.h}}
 function cleanAt(x,y){
  if(!editCtx||selected<0||brush!=='all')return;
- const r=img.getBoundingClientRect();
- if(x<r.left||x>r.right||y<r.top||y>r.bottom)return;
- const sx=editCanvas.width/r.width,sy=editCanvas.height/r.height;
- const cx=(x-r.left)*sx,cy=(y-r.top)*sy;
+ const Lc=imgLocal(x,y);
+ if(Lc.u<0||Lc.u>1||Lc.v<0||Lc.v>1)return;
+ const sx=editCanvas.width/Lc.w,sy=editCanvas.height/Lc.h;
+ const cx=Lc.u*editCanvas.width,cy=Lc.v*editCanvas.height;
  const rad=(+$('brushSize').value)/2*(sx+sy)/2;
  const x0=Math.max(0,Math.floor(cx-rad)),y0=Math.max(0,Math.floor(cy-rad));
  const x1=Math.min(editCanvas.width,Math.ceil(cx+rad)),y1=Math.min(editCanvas.height,Math.ceil(cy+rad));
@@ -333,11 +335,11 @@ const floodYield=()=>new Promise(resolve=>setTimeout(resolve,12));
 // এক টাচে একই রঙের অংশ মুছবে; গাঢ়/কালো রেখা ও ডট স্বয়ংক্রিয়ভাবে সুরক্ষিত থাকবে।
 async function floodAt(x,y,mode){
  if(floodBusy||!editCtx||selected<0||!editCanvas.width)return;
- const r=img.getBoundingClientRect();if(x<r.left||x>r.right||y<r.top||y>r.bottom)return;
+ const Lc=imgLocal(x,y);if(Lc.u<0||Lc.u>1||Lc.v<0||Lc.v>1)return;
  const w=editCanvas.width,h=editCanvas.height,total=w*h;
  // বড় ছবিতে একসঙ্গে প্রসেস না করে নিরাপদ সীমা; ফোন/ট্যাবের মেমরি ও UI সুরক্ষিত রাখে।
  if(total>1500000){$('cleanStatus').textContent='এই ছবিটি বড়। হ্যাং এড়াতে ছবির সাইজ কমিয়ে (১৫ লক্ষ পিক্সেলের মধ্যে) আবার এক টাচ ক্লিনার ব্যবহার করুন।';return;}
- const px=Math.max(0,Math.min(w-1,Math.floor((x-r.left)*w/r.width))),py=Math.max(0,Math.min(h-1,Math.floor((y-r.top)*h/r.height)));
+ const px=Math.max(0,Math.min(w-1,Math.floor(Lc.u*w))),py=Math.max(0,Math.min(h-1,Math.floor(Lc.v*h)));
  floodBusy=true;$('floodBrush').disabled=true;
  try{
   $('cleanStatus').textContent='টাচ করা রঙ শনাক্ত হচ্ছে…';
@@ -381,7 +383,7 @@ async function floodAt(x,y,mode){
    clearTimeout(swapT);swapT=setTimeout(commitIdle,1200);
   }else $('cleanStatus').textContent='ক্লিয়ার করার মতো মিল থাকা হালকা রঙ পাওয়া যায়নি। কালো লাইন/ডট সুরক্ষিত রাখা হয়েছে।';
  }catch(err){$('cleanStatus').textContent='ক্লিয়ার করা যায়নি—ছবির মেমরি সীমা অতিক্রম করেছে। ছবির সাইজ কমিয়ে আবার চেষ্টা করুন।';}
- finally{floodBusy=false;$('floodBrush').disabled=selected<0||!!maps[selected]?.locked;}
+ finally{floodBusy=false;$('floodBrush').disabled=selected<0;}
 }
 
 const bptrs=new Map();let armed=false,pinch=null,blockDraw=false,downPt=null,needSwap=false;
@@ -394,7 +396,7 @@ function endBrush(e){if(!brush||!bptrs.has(e.pointerId))return;const tap=armed&&
 img.addEventListener('pointerup',endBrush,true);img.addEventListener('pointercancel',endBrush,true);
 const STEPS=['১/৪ — ছবিতে A পয়েন্টে টাচ করুন (ম্যাপ জুম/সরানো যায়)','২/৪ — Google Map জুম/সরিয়ে A-র আসল জায়গায় টাচ করুন','৩/৪ — ছবিতে B পয়েন্টে টাচ করুন','৪/৪ — Google Map জুম/সরিয়ে B-র আসল জায়গায় টাচ করুন'];
 let alignMoved=false;
-function pe(){const al=phase==='image'||phase==='map'||phase==='confirm';img.style.pointerEvents=al?((phase==='image'&&imgAdj)?'auto':'none'):((brush||moveOn)?'auto':'none');ghostLayer.style.display=al?'none':'block'}
+function pe(){const al=phase==='image'||phase==='map'||phase==='confirm';img.style.pointerEvents=al?((phase==='image'&&imgAdj)?'auto':'none'):((brush||moveOn)?'auto':'none');img.style.touchAction=(brush||!(selected>=0&&maps[selected]?.locked))?'none':'auto';ghostLayer.style.display=al?'none':'block'}
 function setAdj(v){imgAdj=v;$('alignAdj').textContent='🖼 ছবি সরান: '+(v?'চালু':'বন্ধ');pe()}
 function setMove(v){if(selected>=0&&maps[selected]?.locked)v=false;moveOn=v;$('moveToggle').textContent='✋ ছবি সরানো: '+(v?'চালু':'বন্ধ');pe()}
 function showBar(on){$('alignBtns').style.display=on?'flex':'none';$('panel').style.display=on?'none':'block';if(!on)$('alignOk').style.display='none'}
@@ -435,8 +437,8 @@ const k=Math.hypot(wx,wy)/Math.hypot(vx,vy),phi=Math.atan2(wy,wx)-Math.atan2(vy,
 pushUndo(snap);m.geo={lat:ll.lat,lng:ll.lng,z0:z,w:g.w*k,th:phi};m.aligned=true;m.positionFixed=true;phase='done';setAdj(false);badge.style.display='none';showBar(false);setMove(false);syncImage();saveScreen();alignMoved=false;
 status.textContent='অ্যালাইনমেন্ট সম্পন্ন। ছবি এখন ম্যাপের সঙ্গে আটকে আছে, জুম/সরালে সঙ্গে যাবে। “প্রজেক্ট সেভ” চাপুন।';setTimeout(clearPins,1500);imgPts=[];mapPts=[]}
 $('moveToggle').onclick=()=>setMove(!moveOn);
-function updateLockUI(){if(selected<0||!maps[selected])return;const locked=!!maps[selected].locked;$('lockMap').textContent=locked?'🔒 লক করা':'🔓 আনলক';$('lockMap').classList.toggle('on',locked);$('moveToggle').disabled=locked;$('align').disabled=locked;$('resetView').disabled=locked;$('allBrush').disabled=locked;$('floodBrush').disabled=locked;$('undoBtn').disabled=locked;img.style.pointerEvents=locked?'none':'auto';img.style.touchAction=locked?'auto':'none';if(locked){setBrush('');setMove(false);$('cleanStatus').textContent='🔒 লক অবস্থায় ছবি নিজস্ব অ্যালাইনমেন্টে থাকবে। ম্যাপের ওপর দুই আঙুলে Google Map জুম/প্যান করুন। ছবি সরানো, অ্যালাইন বা ব্রাশ করতে আনলক করুন।'}else{$('cleanStatus').textContent='🔓 আনলক। দুই আঙুলে ছবির জুম/ছোট-বড় করুন। এক আঙুলে সরাতে “ছবি সরানো” চালু করুন। সাদা/কালো ব্রাশও ব্যবহার করতে পারবেন।'}}
-$('lockMap').onclick=()=>{if(selected<0)return;const m=maps[selected];m.locked=!m.locked;if(m.locked){setBrush('');setMove(false);if(phase!=='idle'){$('cancelAlign').click()}}updateLockUI();if(m.geo)syncImage();renderList();status.textContent=m.locked?'🔒 ম্যাপটি লক হয়েছে। এর অ্যালাইনমেন্ট/অবস্থান স্থায়ীভাবে সংরক্ষিত থাকবে; আনলক করলেও নিজে থেকে রিসেট হবে না। ম্যাপের ওপর দুই আঙুলে Google Map জুম/প্যান করতে পারবেন। ছবি সম্পাদনা করতে আবার আনলক করুন।':'🔓 ম্যাপটি আনলক হয়েছে। আগের অ্যালাইনমেন্ট/অবস্থান অক্ষত আছে। দুই আঙুলে ছবির জুম/ছোট-বড় করুন; এক আঙুলে শিফট করতে “ছবি সরানো” চালু করুন। অ্যালাইনমেন্ট ও ব্রাশও ব্যবহার করতে পারবেন।'};
+function updateLockUI(){if(selected<0||!maps[selected])return;const locked=!!maps[selected].locked;$('lockMap').textContent=locked?'🔒 লক করা':'🔓 আনলক';$('lockMap').classList.toggle('on',locked);$('moveToggle').disabled=locked;$('align').disabled=locked;$('resetView').disabled=locked;$('allBrush').disabled=false;$('floodBrush').disabled=false;$('undoBtn').disabled=false;if(locked)setMove(false);pe();if(locked){$('cleanStatus').textContent='🔒 লক অবস্থায় ছবির অবস্থান, মাপ ও কোণ স্থির থাকবে—ক্লিনিংয়ের সময় ছবি সরবে না। ব্রাশ, এক-টাচ ক্লিনিং, আনডু এবং স্বচ্ছতা/উজ্জ্বলতা/কনট্রাস্ট চলবে। দুই আঙুলে Google Map জুম/প্যান করলে ছবি নিজের জায়গায় থেকেই ম্যাপের সঙ্গে যাবে। সরানো বা অ্যালাইন করতে আনলক করুন।'}else{$('cleanStatus').textContent='🔓 আনলক। দুই আঙুলে ছবির জুম/ছোট-বড় করুন। এক আঙুলে সরাতে “ছবি সরানো” চালু করুন। সাদা/কালো ব্রাশও ব্যবহার করতে পারবেন।'}}
+$('lockMap').onclick=()=>{if(selected<0)return;const m=maps[selected];m.locked=!m.locked;if(m.locked){setMove(false);if(phase!=='idle'){$('cancelAlign').click()}}updateLockUI();if(m.geo)syncImage();renderList();status.textContent=m.locked?'🔒 ম্যাপটি লক হয়েছে। অবস্থান স্থির থাকবে; এখন ব্রাশ/এক-টাচ ক্লিনিং, আনডু ও আলো কমানো-বাড়ানো করা যাবে, ছবি সরবে না। সরাতে বা অ্যালাইন করতে আনলক করুন।':'🔓 ম্যাপটি আনলক হয়েছে। আগের অ্যালাইনমেন্ট/অবস্থান অক্ষত আছে। দুই আঙুলে ছবির জুম/ছোট-বড় করুন; এক আঙুলে শিফট করতে “ছবি সরানো” চালু করুন। অ্যালাইনমেন্ট ও ব্রাশও ব্যবহার করতে পারবেন।'};
 $('resetView').onclick=()=>{if(selected<0)return;const m=maps[selected];pushUndo(snapX());delete m.geo;m.positionFixed=false;m.left=50;m.top=50;m.width='auto';m.maxWidth='82vw';m.maxHeight='65vh';m.transform='translate(-50%,-50%)';m.aligned=false;applySettings();setMove(false)};
 
 /* ছবিতে এক আঙুলে সরানো; দুই আঙুলে সরানো + জুম + ঘোরানো; অ্যালাইনের সময় ছোট একটা টাচ = পয়েন্ট */
