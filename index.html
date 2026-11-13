@@ -84,7 +84,7 @@ function ghostPlace(el,m){el.style.transition='none';if(m.geo&&map){const q=m.ge
 function renderGhosts(){const keep=new Set();maps.forEach((m,i)=>{if(i===selected||m.on===false)return;m.id=m.id||uid();keep.add(m.id);let el=ghosts.get(m.id);if(!el){el=document.createElement('img');el.className='ghost';el.src=m.data;ghostLayer.appendChild(el);ghosts.set(m.id,el)}el.style.opacity=(m.opacity??65)/100;el.style.filter=(m.brightness??100)===100?'none':`brightness(${(m.brightness??100)/100})`;el.style.zIndex=String(i+1);el.decoding='async';ghostPlace(el,m)});for(const [id,el] of [...ghosts]){if(!keep.has(id)){el.remove();ghosts.delete(id)}}}
 function syncGhosts(){if(!map)return;for(const m of maps){const el=ghosts.get(m.id);if(el&&m.geo)ghostPlace(el,m)}}
 function toggleVis(i){const m=maps[i];if(!m)return;m.on=(m.on===false);if(i===selected){img.style.display=m.on===false?'none':'block';if(m.on===false)liveOff()}renderGhosts();renderList()}
-function setBrush(v){if(v&&selected>=0&&maps[selected]?.locked){status.textContent='এই ম্যাপটি লক করা আছে। কাজ করতে আগে আনলক করুন।';return}brush=v;phase='idle';$('allBrush').classList.toggle('on',v==='all');$('floodBrush').classList.toggle('on',v==='flood');$('brushOff').classList.toggle('on',!v);pe();if(!v&&needSwap){clearTimeout(swapT);commitIdle()}$('cleanStatus').textContent=v==='all'?'এক আঙুল দিয়ে ঘষুন—সাদা, কালো ও সব রঙের অংশ সত্যিকারের স্বচ্ছ হবে; কালো রঙ আঁকা হবে না, নিচের ম্যাপ দেখা যাবে।':v==='flood'?'ছবির যে রঙটি মুছতে চান, সেই রঙের ওপর একবার টাচ করুন। পুরো ছবিতে ওই রঙের মতো (সহনশীলতার মধ্যে) সব পিক্সেল মুছবে; কালো/অন্য রঙ অক্ষত থাকবে।':'ব্রাশ বন্ধ। Undo দিয়ে শেষ ক্লিনিং ফিরিয়ে আনতে পারবেন।'}$('allBrush').onclick=()=>{setBrush('all');if(selected>=0&&map&&!maps[selected].geo)anchorNow()};$('brushOff').onclick=()=>setBrush('');$('floodBrush').onclick=()=>setBrush('flood');
+function setBrush(v){if(v&&selected>=0&&maps[selected]?.locked){status.textContent='এই ম্যাপটি লক করা আছে। কাজ করতে আগে আনলক করুন।';return}brush=v;phase='idle';$('allBrush').classList.toggle('on',v==='all');$('floodBrush').classList.toggle('on',v==='flood');$('brushOff').classList.toggle('on',!v);pe();if(!v&&needSwap){clearTimeout(swapT);commitIdle()}$('cleanStatus').textContent=v==='all'?'এক আঙুল দিয়ে ঘষুন—সাদা, কালো ও সব রঙের অংশ সত্যিকারের স্বচ্ছ হবে; কালো রঙ আঁকা হবে না, নিচের ম্যাপ দেখা যাবে।':v==='flood'?'সাদা/হালকা রঙের ওপর একবার টাচ করুন। মিল থাকা হালকা অংশ মুছবে; কালো লাইন ও ডট এক টাচে সুরক্ষিত থাকবে। কালো অংশ হাতে ব্রাশ দিয়ে মুছতে পারবেন।':'ব্রাশ বন্ধ। Undo দিয়ে শেষ ক্লিনিং ফিরিয়ে আনতে পারবেন।'}$('allBrush').onclick=()=>{setBrush('all');if(selected>=0&&map&&!maps[selected].geo)anchorNow()};$('brushOff').onclick=()=>setBrush('');$('floodBrush').onclick=()=>setBrush('flood');
 function cleanAt(x,y){
  if(!editCtx||selected<0||brush!=='all')return;
  const r=img.getBoundingClientRect();
@@ -114,44 +114,58 @@ function cleanAt(x,y){
  $('cleanStatus').textContent=n.toLocaleString('bn-BD')+'টি পিক্সেল স্বচ্ছ করা হয়েছে। নিচের ম্যাপ দেখা যাবে; এই ব্রাশের কাজ Undo-তে থাকবে।';
 }
 let floodBusy=false;
-const floodYield=()=>new Promise(resolve=>setTimeout(resolve,0));
-// এক টাচে এলাকা ক্লিয়ার হলো আলাদা টুল; সাদা/কালো ঘষার ব্রাশ আগের মতোই থাকে।
-
+const floodYield=()=>new Promise(resolve=>setTimeout(resolve,12));
+// এক টাচে একই রঙের অংশ মুছবে; গাঢ়/কালো রেখা ও ডট স্বয়ংক্রিয়ভাবে সুরক্ষিত থাকবে।
 async function floodAt(x,y,mode){
  if(floodBusy||!editCtx||selected<0||!editCanvas.width)return;
  const r=img.getBoundingClientRect();if(x<r.left||x>r.right||y<r.top||y>r.bottom)return;
  const w=editCanvas.width,h=editCanvas.height,total=w*h;
- // Pixel-by-pixel global color selection; no flood-fill queue/stack, so mobile RAM stays lower.
- if(total>2000000){$('cleanStatus').textContent='এই ম্যাপটি বড়। হ্যাং এড়াতে এক টাচ ক্লিনারের জন্য ছবিটি ২০ লক্ষ পিক্সেলের নিচে ছোট করুন।';return;}
+ // বড় ছবিতে একসঙ্গে প্রসেস না করে নিরাপদ সীমা; ফোন/ট্যাবের মেমরি ও UI সুরক্ষিত রাখে।
+ if(total>1500000){$('cleanStatus').textContent='এই ছবিটি বড়। হ্যাং এড়াতে ছবির সাইজ কমিয়ে (১৫ লক্ষ পিক্সেলের মধ্যে) আবার এক টাচ ক্লিনার ব্যবহার করুন।';return;}
  const px=Math.max(0,Math.min(w-1,Math.floor((x-r.left)*w/r.width))),py=Math.max(0,Math.min(h-1,Math.floor((y-r.top)*h/r.height)));
  floodBusy=true;$('floodBrush').disabled=true;
  try{
   $('cleanStatus').textContent='টাচ করা রঙ শনাক্ত হচ্ছে…';
+  // এই read একবারই করা হয়; এরপর ছোট ছোট সারিতে কাজ করে UI-কে সময় দেওয়া হয়।
   const im=editCtx.getImageData(0,0,w,h),a=im.data,start=(py*w+px)*4;
   if(a[start+3]===0){$('cleanStatus').textContent='এখানে স্বচ্ছ/আগে থেকেই ক্লিয়ার করা অংশ। দৃশ্যমান রঙের ওপর টাচ করুন।';return;}
   const tr=a[start],tg=a[start+1],tb=a[start+2];
-  const tol=Math.max(1,Math.round((+$('floodTol').value)*2.55));
+  const lum=(299*tr+587*tg+114*tb)/1000;
+  // কালো/গাঢ় রঙে টাচ করলে অটো-ক্লিনার কিছুই মুছবে না।
+  if(lum<90){$('cleanStatus').textContent='এটি কালো/গাঢ় লাইন বা ডট। এক টাচ ক্লিনার এগুলো মুছবে না। দরকার হলে হাতে ব্রাশ ব্যবহার করুন।';return;}
+  // সহনশীলতার সর্বোচ্চ সীমা রাখা হলো, যাতে সাদা ক্লিন করতে গিয়ে অন্য রঙ না মুছে যায়।
+  const tol=Math.min(90,Math.max(1,Math.round((+$('floodTol').value)*0.9)));
   const before=new Uint8Array(total);
-  let changed=0,work=0;
-  // Undo snapshot: alpha channel only. Other colors remain untouched.
-  for(let z=0,j=3;z<total;z++,j+=4)before[z]=a[j];
+  let changed=0;
   $('cleanStatus').textContent='একই রঙের অংশ খোঁজা হচ্ছে…';
-  for(let y0=0;y0<h;y0++){
-   let row=y0*w*4;
-   for(let x0=0;x0<w;x0++){
-    const k=row+x0*4;
-    if(a[k+3]!==0 && Math.max(Math.abs(a[k]-tr),Math.abs(a[k+1]-tg),Math.abs(a[k+2]-tb))<=tol){a[k+3]=0;changed++;}
+  const rowsPerBatch=8;
+  for(let y0=0;y0<h;y0+=rowsPerBatch){
+   const yEnd=Math.min(h,y0+rowsPerBatch);
+   for(let yy=y0;yy<yEnd;yy++){
+    const row=yy*w*4;
+    for(let xx=0;xx<w;xx++){
+     const k=row+xx*4,alpha=a[k+3],z=yy*w+xx;
+     before[z]=alpha;
+     if(alpha===0)continue;
+     const rr=a[k],gg=a[k+1],bb=a[k+2];
+     const pixelLum=(299*rr+587*gg+114*bb)/1000;
+     // কালো/গাঢ় রেখা বা ডট কখনোই এক-টাচে মুছবে না।
+     if(pixelLum<90)continue;
+     if(Math.max(Math.abs(rr-tr),Math.abs(gg-tg),Math.abs(bb-tb))<=tol){a[k+3]=0;changed++;}
+    }
    }
-   if((y0&31)===31){$('cleanStatus').textContent='ক্লিয়ার হচ্ছে… '+Math.round((y0+1)*100/h).toLocaleString('bn-BD')+'%';await floodYield();}
+   // শুধু এই ব্যাচের অংশ ক্যানভাসে বসানো; দীর্ঘ একটানা কাজের বদলে ছোট ধাপে রেন্ডার।
+   editCtx.putImageData(im,0,0,0,y0,w,yEnd-y0);
+   $('cleanStatus').textContent='ক্লিয়ার হচ্ছে… '+Math.round(yEnd*100/h).toLocaleString('bn-BD')+'%';
+   await floodYield();
   }
   if(changed){
    pushUndo({t:'full',data:before});
-   editCtx.putImageData(im,0,0);
    if(!liveOn)startLive();dirty=true;needSwap=true;editVer++;
-   $('cleanStatus').textContent=changed.toLocaleString('bn-BD')+'টি একই/কাছাকাছি রঙের পিক্সেল পুরো ছবিতে ক্লিয়ার হয়েছে। অন্য রঙ অক্ষত। এই কাজটি Undo-তে সংরক্ষিত হয়েছে।';
-   clearTimeout(swapT);swapT=setTimeout(commitIdle,900);
-  }else $('cleanStatus').textContent='এই সহনশীলতার মধ্যে একই রঙের আর কোনো পিক্সেল পাওয়া যায়নি। সহনশীলতা বাড়িয়ে চেষ্টা করুন।';
- }catch(err){$('cleanStatus').textContent='ক্লিয়ার করা যায়নি—ছবির মেমরি সীমা অতিক্রম করেছে। ছবিটি ছোট করে আবার চেষ্টা করুন।';}
+   $('cleanStatus').textContent=changed.toLocaleString('bn-BD')+'টি মিল থাকা হালকা/সাদা পিক্সেল ক্লিয়ার হয়েছে। কালো লাইন ও ডট সুরক্ষিত আছে। Undo-তে আগের ছবি ফিরবে।';
+   clearTimeout(swapT);swapT=setTimeout(commitIdle,1200);
+  }else $('cleanStatus').textContent='ক্লিয়ার করার মতো মিল থাকা হালকা রঙ পাওয়া যায়নি। কালো লাইন/ডট সুরক্ষিত রাখা হয়েছে।';
+ }catch(err){$('cleanStatus').textContent='ক্লিয়ার করা যায়নি—ছবির মেমরি সীমা অতিক্রম করেছে। ছবির সাইজ কমিয়ে আবার চেষ্টা করুন।';}
  finally{floodBusy=false;$('floodBrush').disabled=selected<0||!!maps[selected]?.locked;}
 }
 
