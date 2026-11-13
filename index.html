@@ -7,7 +7,7 @@
 <button id="upload" class="primary">📤 ম্যাপ আপলোড</button><div id="imageLayer"><img id="overlayImg" alt="আপলোড করা ম্যাপ" style="display:none"></div><div id="tapCatcher"></div><div id="badge"></div><div id="alignBtns"><button id="alignOk" class="primary" style="display:none">✔ বসান</button><button id="alignAdj">🖼 ছবি সরান: বন্ধ</button><button id="alignUndo">↩ পিছনে</button><button id="alignCancel">✖ বাতিল</button></div>
 <div id="panel"><div id="panelHead"><b>🗺️ কাজের কন্ট্রোল</b><button id="panelToggle" type="button">⌄ নিচে লুকান</button></div><p id="status">প্রথমে একটি প্রজেক্টের নাম দিন, তারপর ম্যাপ আপলোড করুন। একসঙ্গে অনেকগুলো ছবি যোগ করুন; ২০০–৩০০টি ম্যাপও প্রজেক্টে রাখা যাবে (ডিভাইসের স্টোরেজের সীমা সাপেক্ষে)। তালিকা থেকে প্রতিটি ম্যাপ আলাদা নির্বাচন করে সরান, নাম বদলান ও ON/OFF করুন।</p>
 <div class="row"><input id="projectName" type="text" placeholder="প্রজেক্টের নাম" style="flex:1;min-width:130px"><button id="newProject">＋ নতুন প্রজেক্ট</button><button id="saveProject" class="primary">💾 প্রজেক্ট সেভ</button></div>
-<div class="row"><select id="projectSelect" style="flex:1;min-width:140px"><option value="">সেভ করা প্রজেক্ট বাছুন</option></select><button id="openProject">📂 খুলুন</button><button id="exportProject">⬇ Google Earth KMZ সেভ</button><button id="importProject">⬆ KML/KMZ খুলুন</button></div>
+<div class="row"><select id="projectSelect" style="flex:1;min-width:140px"><option value="">সেভ করা প্রজেক্ট বাছুন</option></select><button id="openProject">📂 খুলুন</button><button id="exportKml">⬇ KML সেভ</button><button id="exportProject">⬇ KMZ সেভ (ছবিসহ)</button><button id="importProject">⬆ KML/KMZ খুলুন</button></div>
 <div class="row"><button id="addMaps" class="primary">📤 একসঙ্গে অনেকগুলো ম্যাপ যোগ</button><span class="hint" id="count">ম্যাপ: ০</span></div>
 <div class="row" style="justify-content:space-between"><b>🗺️ ম্যাপের নামের তালিকা</b><button id="toggleMapList" type="button">☰ তালিকা দেখুন</button></div><div id="mapList" style="display:none"></div>
 <div id="selectedTools" style="display:none;border-top:1px solid #d5e0ea;padding-top:7px">
@@ -16,7 +16,7 @@
 <div class="row"><label>স্বচ্ছতা <input id="opacity" type="range" min="5" max="100" value="65"><output id="opVal">৬৫%</output></label><label>উজ্জ্বলতা <input id="brightness" type="range" min="30" max="200" value="100"><output id="brVal">১০০%</output></label></div>
 <div class="row"><button id="allBrush">🖌️ সব রঙ ব্রাশ দিয়ে ক্লিয়ার</button><button id="floodBrush">🪄 এক টাচে একই রঙের সব অংশ ক্লিয়ার</button><label>রঙের মিল/সহনশীলতা <input id="floodTol" type="range" min="1" max="100" value="18"></label><button id="brushOff">✋ ব্রাশ বন্ধ</button><button id="undoBtn">↩ আনডু (০)</button><label>ব্রাশের সাইজ <input id="brushSize" type="range" min="6" max="120" value="28"></label></div>
 <div class="hint" id="cleanStatus">ব্রাশ দিয়ে ঘষে মুছুন অথবা এক টাচে নির্বাচিত রঙের সব মিল থাকা অংশ ক্লিয়ার করুন। দুই ধরনের কাজই Undo করা যাবে; সর্বশেষ ১০টি ক্লিনিং/সম্পাদনা ধাপ পর্যন্ত ফিরিয়ে আনতে পারবেন।</div>
-</div><div class="hint">প্রজেক্ট সেভ করলে Google Earth-উপযোগী KMZ-ও তৈরি হবে। অন্য সফটওয়্যারের .KML/.KMZ GroundOverlay ফাইলও “KML/KMZ খুলুন” দিয়ে আমদানি করুন।</div></div>
+</div><div class="hint">KML সেভ করলে স্থানাঙ্ক ও ছবির লিংকসহ KML এবং ছবিগুলো আলাদা ফাইল হিসেবে নামবে—সবগুলো একই ফোল্ডারে রাখুন। KMZ সেভ করলে KML ও ছবিগুলো এক ফাইলের ভিতরে থাকবে; Google Earth-এ খোলার জন্য KMZ বেশি সুবিধাজনক।</div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script><script>
 (()=>{'use strict';const $=id=>document.getElementById(id),img=$('overlayImg'),file=$('file'),status=$('status'),catcher=$('tapCatcher'),badge=$('badge');
 const DB='BanglaCADOverlayProjects',STORE='projects';let saveHandle=null,imgAdj=false,swapT=0,undoStack=[],curStroke=null,gSnap=null,swapping=false,liveOn=false,dirty=false,editVer=0,blobUrl=null,curOp=.65,map=null,mapMarkers=[],moveOn=true,db,maps=[],selected=-1,projectId='',phase='idle',imgPts=[],mapPts=[],pins=[],brush='',drawing=false,last=null,editCanvas=document.createElement('canvas'),editCtx=null;
@@ -55,25 +55,47 @@ async function makeKmz(project){
  const kml=`<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>${esc(project.name)}</name><description>Bangla CAD Map Pro KMZ. Map images are included as GroundOverlay. Project editing data is in project.json.</description>${overlays.join('')}</Document></kml>`;
  files.unshift({name:'doc.kml',data:kml}); return makeZip(files)
 }
+async function makeKmlFiles(project){
+ const overlays=[],downloads=[];
+ for(let i=0;i<project.maps.length;i++){
+  const m=project.maps[i]; if(!m.data||!m.geo||!map)continue;
+  const path=`map_${String(i+1).padStart(3,'0')}.png`;
+  const blob=await (await fetch(m.data)).blob();downloads.push({name:path,blob});
+  const q=m.geo,z=q.z0,center=map.project([q.lat,q.lng],z),half=(q.w||1)/2;
+  const west=map.unproject(L.point(center.x-half,center.y),z).lng,east=map.unproject(L.point(center.x+half,center.y),z).lng;
+  const north=map.unproject(L.point(center.x,center.y-half),z).lat,south=map.unproject(L.point(center.x,center.y+half),z).lat;
+  overlays.push(`<GroundOverlay><name>${esc(m.name||`Map ${i+1}`)}</name><Icon><href>${path}</href></Icon><LatLonBox><north>${north}</north><south>${south}</south><east>${east}</east><west>${west}</west><rotation>${-(q.th||0)*180/Math.PI}</rotation></LatLonBox></GroundOverlay>`);
+ }
+ const kml=`<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>${esc(project.name)}</name><description>KML overlay. Keep the downloaded image files in the same folder as this KML file.</description>${overlays.join('')}</Document></kml>`;
+ return {kml,downloads};
+}
+function downloadBlob(blob,name){const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),60000)}
+$('exportKml').onclick=async()=>{try{flushEdit();if(!maps.length){status.textContent='আগে প্রজেক্টে ম্যাপ যোগ করুন।';return}maps.forEach(m=>{if(m.geo)m.positionFixed=true});const p={name:$('projectName').value.trim()||'প্রজেক্ট',maps};status.textContent='KML ও ছবির ফাইল তৈরি হচ্ছে…';const {kml,downloads}=await makeKmlFiles(p);const base=(p.name.replace(/[^\p{L}\p{N}_-]+/gu,'_')||'Bangla_CAD_Project');downloadBlob(new Blob([kml],{type:'application/vnd.google-earth.kml+xml'}),base+'.kml');downloads.forEach((d,i)=>setTimeout(()=>downloadBlob(d.blob,d.name),700*(i+1)));status.textContent=`KML তৈরি হয়েছে। ${downloads.length}টি ছবিও আলাদা ডাউনলোড হবে। KML ও সব ছবি একই ফোল্ডারে রাখবেন। মোবাইল Chrome একাধিক ডাউনলোডের অনুমতি চাইলে Allow দিন।`;}catch(e){status.textContent='KML তৈরি করা যায়নি: '+e.message}};
 async function saveProjectFile(project){
- const safe=(project.name.replace(/[^\p{L}\p{N}_-]+/gu,'_')||'Bangla_CAD_Project')+'.kmz';const bytes=makeKmz(project),blob=new Blob([bytes],{type:'application/vnd.google-earth.kmz'});
+ const safe=(project.name.replace(/[^\p{L}\p{N}_-]+/gu,'_')||'Bangla_CAD_Project')+'.kmz';const bytes=await makeKmz(project),blob=new Blob([bytes],{type:'application/vnd.google-earth.kmz'});
  if(window.showSaveFilePicker){try{const h=await window.showSaveFilePicker({suggestedName:safe,types:[{description:'Google Earth KMZ',accept:{'application/vnd.google-earth.kmz':['.kmz']}}]});const w=await h.createWritable();await w.write(blob);await w.close();saveHandle=h;return 'KMZ ফাইলটি আপনার নির্বাচিত লোকেশনে সেভ হয়েছে।'}catch(e){if(e&&e.name==='AbortError')return 'লোকেশন নির্বাচন বাতিল হয়েছে; ব্রাউজারের ভেতরের প্রজেক্ট সেভ রাখা হয়েছে।';throw e}}
  const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=safe;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),5000);return 'KMZ ফাইল ডাউনলোডে পাঠানো হয়েছে। Chrome-এর Downloads সেটিংসে লোকেশন বেছে নেওয়ার ব্যবস্থা চালু থাকলে সেখানে সেভের জায়গা নির্বাচন করুন।'
 }
-$('saveProject').onclick=async()=>{try{flushEdit();if(!maps.length){status.textContent='সেভ করার আগে অন্তত একটি ম্যাপ আপলোড করুন।';return}const name=$('projectName').value.trim()||'নামহীন প্রজেক্ট';projectId=projectId||uid();maps.forEach(m=>{if(m.geo)m.positionFixed=true});const p={id:projectId,name,updated:Date.now(),maps};await req('readwrite',s=>s.put(p));refreshProjects();status.textContent='প্রজেক্ট ব্রাউজারে সেভ হচ্ছে এবং KMZ ফাইল তৈরি হচ্ছে…';const msg=await saveProjectFile(p);status.textContent=`“${name}” — ${maps.length}টি ম্যাপসহ ব্রাউজারে সেভ হয়েছে। ${msg} পরে “KMZ খুলুন” দিয়ে ওই ফাইল খুলতে পারবেন।`}catch(e){status.textContent='সেভ করা যায়নি: '+e.message+'। জায়গা কম থাকলে কম ছবি দিয়ে চেষ্টা করুন।'}};
+$('saveProject').onclick=async()=>{try{flushEdit();if(!maps.length){status.textContent='সেভ করার আগে অন্তত একটি ম্যাপ আপলোড করুন।';return}const name=$('projectName').value.trim()||'নামহীন প্রজেক্ট';projectId=projectId||uid();maps.forEach(m=>{if(m.geo)m.positionFixed=true});const p={id:projectId,name,updated:Date.now(),maps};await req('readwrite',s=>s.put(p));refreshProjects();status.textContent=`“${name}” — ${maps.length}টি ম্যাপসহ প্রজেক্ট এই ব্রাউজারে সেভ হয়েছে। KML বা KMZ আলাদা করে ডাউনলোড করতে সংশ্লিষ্ট বোতাম চাপুন।`}catch(e){status.textContent='সেভ করা যায়নি: '+e.message+'। জায়গা কম থাকলে কম ছবি দিয়ে চেষ্টা করুন।'}};
 $('exportProject').onclick=async()=>{let u='';try{flushEdit();if(!maps.length){status.textContent='আগে প্রজেক্টে ম্যাপ যোগ করুন।';return}maps.forEach(m=>{if(m.geo)m.positionFixed=true});const p={format:'BanglaCADOverlayProject',version:3,name:$('projectName').value.trim()||'প্রজেক্ট',maps};status.textContent='Google Earth-উপযোগী KMZ তৈরি হচ্ছে…';const bytes=await makeKmz(p),blob=new Blob([bytes],{type:'application/vnd.google-earth.kmz'});u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=(p.name.replace(/[^\\p{L}\\p{N}_-]+/gu,'_')||'Bangla_CAD_Project')+'.kmz';document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(u)},60000);status.textContent='KMZ তৈরি হয়েছে। অ্যালাইন করা ম্যাপের GroundOverlay ছবিও ফাইলে আছে—Google Earth-এ খোলা যাবে।'}catch(e){if(u)URL.revokeObjectURL(u);status.textContent='KMZ তৈরি/ডাউনলোড করা যায়নি: '+e.message}};
 $('importProject').onclick=()=>$('projectFile').click();
 async function zipEntries(buffer){
  const v=new DataView(buffer),u8=new Uint8Array(buffer);let e=-1;
  for(let i=buffer.byteLength-22;i>=Math.max(0,buffer.byteLength-65558);i--)if(v.getUint32(i,true)===0x06054b50){e=i;break}
- if(e<0)throw Error('এটি KML বা সঠিক KMZ/ZIP ফাইল নয়');
+ if(e<0)throw Error('KMZ ফাইলের ZIP সূচি পড়া যায়নি—ফাইলটি অসম্পূর্ণ বা ক্ষতিগ্রস্ত হতে পারে।');
  const count=v.getUint16(e+10,true),cdOff=v.getUint32(e+16,true),out={};let pos=cdOff;
  for(let i=0;i<count;i++){
-  if(v.getUint32(pos,true)!==0x02014b50)break;
-  const method=v.getUint16(pos+10,true),cs=v.getUint32(pos+20,true),nl=v.getUint16(pos+28,true),el=v.getUint16(pos+30,true),cl=v.getUint16(pos+32,true),lo=v.getUint32(pos+42,true),name=new TextDecoder().decode(u8.slice(pos+46,pos+46+nl));
-  const lnl=v.getUint16(lo+26,true),lel=v.getUint16(lo+28,true),data=u8.slice(lo+30+lnl+lel,lo+30+lnl+lel+cs);
+  if(pos+46>u8.length||v.getUint32(pos,true)!==0x02014b50)throw Error('KMZ-এর ফাইল তালিকা সঠিক নয়।');
+  const flags=v.getUint16(pos+8,true),method=v.getUint16(pos+10,true),cs=v.getUint32(pos+20,true),nl=v.getUint16(pos+28,true),el=v.getUint16(pos+30,true),cl=v.getUint16(pos+32,true),lo=v.getUint32(pos+42,true),name=new TextDecoder().decode(u8.slice(pos+46,pos+46+nl)).replace(/\\/g,'/');
+  if(flags&1)throw Error('এই KMZ পাসওয়ার্ড-সুরক্ষিত; পাসওয়ার্ড ছাড়া খোলা যাবে না।');
+  if(lo+30>u8.length||v.getUint32(lo,true)!==0x04034b50)throw Error('KMZ-এর একটি ফাইলের ডেটা পড়া যাচ্ছে না: '+name);
+  const lnl=v.getUint16(lo+26,true),lel=v.getUint16(lo+28,true),begin=lo+30+lnl+lel,data=u8.slice(begin,begin+cs);
   if(method===0)out[name]=data;
-  else if(method===8&&'DecompressionStream'in window){const ds=new DecompressionStream('deflate-raw');out[name]=new Uint8Array(await new Response(new Blob([data]).stream().pipeThrough(ds)).arrayBuffer())}
+  else if(method===8){
+   if(!('DecompressionStream'in window))throw Error('এই Android Chrome-এ ZIP/Deflate খুলবার সুবিধা নেই। Chrome আপডেট করে আবার চেষ্টা করুন।');
+   try{const ds=new DecompressionStream('deflate-raw');out[name]=new Uint8Array(await new Response(new Blob([data]).stream().pipeThrough(ds)).arrayBuffer())}
+   catch(err){throw Error('KMZ-এর compressed data খুলতে সমস্যা হয়েছে ('+name+'): '+err.message)}
+  }else throw Error('KMZ-এ অসমর্থিত compression পদ্ধতি আছে ('+method+'): '+name);
   pos+=46+nl+el+cl;
  }
  return out
@@ -84,7 +106,7 @@ function kmlTextToMaps(xml,files,name){
  const overlays=[...doc.getElementsByTagNameNS('*','GroundOverlay')],out=[];
  for(const [i,g] of overlays.entries()){
   const href=g.getElementsByTagNameNS('*','href')[0]?.textContent?.trim();if(!href)continue;
-  const key=decodeURIComponent(href).replace(/^\.\//,'');let bytes=files[key]||files[Object.keys(files).find(k=>k.endsWith('/'+key)||k===key)];
+  const key=decodeURIComponent(href).replace(/^\.\//,'').replace(/\\/g,'/');const found=Object.keys(files).find(k=>k.toLowerCase()===key.toLowerCase()||k.toLowerCase().endsWith('/'+key.toLowerCase()));let bytes=found?files[found]:null;
   if(!bytes)continue;
   const mime=/\.jpe?g$/i.test(key)?'image/jpeg':/\.webp$/i.test(key)?'image/webp':'image/png';
   const dataUrl=`data:${mime};base64,${bytesBase64(bytes)}`;
