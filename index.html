@@ -40,7 +40,32 @@ $('deleteMap').onclick=()=>{if(selected<0)return;if(!confirm('এই ম্য�
 $('opacity').oninput=()=>{if(selected<0)return;maps[selected].opacity=+$('opacity').value;setOp(maps[selected].opacity/100);$('opVal').value=maps[selected].opacity+'%'};$('brightness').oninput=()=>{if(selected<0)return;maps[selected].brightness=+$('brightness').value;img.style.filter=maps[selected].brightness===100?'none':`brightness(${maps[selected].brightness/100})`;live.style.filter=img.style.filter;$('brVal').value=maps[selected].brightness+'%'};
 const live=editCanvas;live.id='liveCv';$('imageLayer').appendChild(live);
 function setOp(v){curOp=v;if(liveOn)live.style.opacity=v;else img.style.opacity=v}
-function copyLive(){live.style.cssText=img.style.cssText;live.style.opacity=curOp;live.style.display='block';live.style.pointerEvents='none';img.style.opacity=0}
+function copyLive(){
+  // Canvas-কে ছবির ঠিক একই স্ক্রিন-আকার/অবস্থানে বসাই, যাতে স্বচ্ছ অংশে
+  // কালো ব্যাকগ্রাউন্ড না এসে নিচের স্যাটেলাইট ম্যাপ দেখা যায়।
+  const r=img.getBoundingClientRect(),p=$('imageLayer').getBoundingClientRect();
+  live.style.position='absolute';
+  live.style.left=(r.left-p.left)+'px';
+  live.style.top=(r.top-p.top)+'px';
+  live.style.width=r.width+'px';
+  live.style.height=r.height+'px';
+  live.style.maxWidth='none';
+  live.style.maxHeight='none';
+  live.style.transform='none';
+  live.style.objectFit='fill';
+  live.style.padding='0';
+  live.style.margin='0';
+  live.style.border='0';
+  live.style.background='transparent';
+  live.style.backgroundColor='transparent';
+  live.style.mixBlendMode='normal';
+  live.style.filter=img.style.filter||'none';
+  live.style.opacity=String(curOp);
+  live.style.zIndex='9';
+  live.style.display='block';
+  live.style.pointerEvents='none';
+  img.style.opacity='0';
+}
 function startLive(){if(selected<0)return;curOp=(maps[selected].opacity??65)/100;liveOn=true;copyLive()}
 function liveOff(){liveOn=false;live.style.display='none';if(selected>=0&&img.style.display!=='none')img.style.opacity=(maps[selected].opacity??65)/100}
 function flushEdit(){if(dirty&&selected>=0&&editCanvas.width){maps[selected].data=editCanvas.toDataURL('image/png');maps[selected].cleaned=true;dirty=false}}
@@ -51,7 +76,7 @@ function updUndo(){const b=$('undoBtn');if(b)b.textContent='↩ আনডু ('+
 function pushUndo(e){if(!e)return;undoStack.push(e);if(undoStack.length>10)undoStack.shift();updUndo()}
 function snapX(){const m=maps[selected];return m?{t:'x',geo:m.geo?{...m.geo}:undefined,left:m.left,top:m.top,width:m.width,maxWidth:m.maxWidth,maxHeight:m.maxHeight,transform:m.transform,aligned:m.aligned}:null}
 function undoClean(st){if(!editCtx||!st||!st.i||!st.i.length)return;const d=editCtx.getImageData(0,0,editCanvas.width,editCanvas.height),a=d.data;for(let j=0;j<st.i.length;j++)a[st.i[j]*4+3]=st.a[j];editCtx.putImageData(d,0,0)}
-$('undoBtn').onclick=()=>{if(!undoStack.length||selected<0)return;const e=undoStack.pop(),m=maps[selected];updUndo();if(e.t==='full'){if(!editCtx)return;const d=editCtx.getImageData(0,0,editCanvas.width,editCanvas.height);for(let z=0;z<e.data.length;z++)d.data[z*4+3]=e.data[z];editCtx.putImageData(d,0,0);if(!liveOn)startLive();dirty=true;needSwap=true;editVer++;clearTimeout(swapT);commitIdle();status.textContent='এক টাচে রঙ ক্লিয়ার আনডু হয়েছে; আগের ছবি ফিরে এসেছে।'}else if(e.t==='c'){if(!editCtx)return;drawing=false;curStroke=null;undoClean(e.s);if(!liveOn)startLive();dirty=true;needSwap=true;editVer++;clearTimeout(swapT);commitIdle();status.textContent='শেষ ব্রাশ/এক-টাচ ক্লিনিং আনডু হয়েছে; আগের ছবি ফিরে এসেছে।'}else{if(e.geo)m.geo=e.geo;else delete m.geo;m.left=e.left;m.top=e.top;m.width=e.width;m.maxWidth=e.maxWidth;m.maxHeight=e.maxHeight;m.transform=e.transform;m.aligned=e.aligned;applySettings();status.textContent='শেষ সরানো/অ্যালাইন আনডু হয়েছে।'}};
+$('undoBtn').onclick=()=>{if(!undoStack.length||selected<0)return;const e=undoStack.pop(),m=maps[selected];updUndo();if(e.t==='full'){if(!editCtx)return;const d=editCtx.getImageData(0,0,editCanvas.width,editCanvas.height);for(let z=0;z<e.data.length;z++)d.data[z*4+3]=e.data[z];editCtx.putImageData(d,0,0);if(!liveOn)startLive();dirty=true;needSwap=true;editVer++;clearTimeout(swapT);commitIdle();status.textContent='এক টাচে রঙের অংশ স্বচ্ছ করে ক্লিয়ার করা আনডু হয়েছে; আগের ছবি ফিরে এসেছে।'}else if(e.t==='c'){if(!editCtx)return;drawing=false;curStroke=null;undoClean(e.s);if(!liveOn)startLive();dirty=true;needSwap=true;editVer++;clearTimeout(swapT);commitIdle();status.textContent='শেষ ব্রাশ/এক-টাচ ক্লিনিং আনডু হয়েছে; আগের ছবি ফিরে এসেছে।'}else{if(e.geo)m.geo=e.geo;else delete m.geo;m.left=e.left;m.top=e.top;m.width=e.width;m.maxWidth=e.maxWidth;m.maxHeight=e.maxHeight;m.transform=e.transform;m.aligned=e.aligned;applySettings();status.textContent='শেষ সরানো/অ্যালাইন আনডু হয়েছে।'}};
 function commitIdle(){if(needSwap&&!drawing&&!bptrs.size&&selected>=0&&editCanvas.width){needSwap=false;commitLive()}}
 const ghostLayer=document.createElement('div');ghostLayer.id='ghostLayer';ghostLayer.style.cssText='position:absolute;inset:0;pointer-events:none';$('imageLayer').insertBefore(ghostLayer,img);
 const ghosts=new Map();
@@ -59,8 +84,35 @@ function ghostPlace(el,m){el.style.transition='none';if(m.geo&&map){const q=m.ge
 function renderGhosts(){const keep=new Set();maps.forEach((m,i)=>{if(i===selected||m.on===false)return;m.id=m.id||uid();keep.add(m.id);let el=ghosts.get(m.id);if(!el){el=document.createElement('img');el.className='ghost';el.src=m.data;ghostLayer.appendChild(el);ghosts.set(m.id,el)}el.style.opacity=(m.opacity??65)/100;el.style.filter=(m.brightness??100)===100?'none':`brightness(${(m.brightness??100)/100})`;el.style.zIndex=String(i+1);el.decoding='async';ghostPlace(el,m)});for(const [id,el] of [...ghosts]){if(!keep.has(id)){el.remove();ghosts.delete(id)}}}
 function syncGhosts(){if(!map)return;for(const m of maps){const el=ghosts.get(m.id);if(el&&m.geo)ghostPlace(el,m)}}
 function toggleVis(i){const m=maps[i];if(!m)return;m.on=(m.on===false);if(i===selected){img.style.display=m.on===false?'none':'block';if(m.on===false)liveOff()}renderGhosts();renderList()}
-function setBrush(v){if(v&&selected>=0&&maps[selected]?.locked){status.textContent='এই ম্যাপটি লক করা আছে। কাজ করতে আগে আনলক করুন।';return}brush=v;phase='idle';$('allBrush').classList.toggle('on',v==='all');$('floodBrush').classList.toggle('on',v==='flood');$('brushOff').classList.toggle('on',!v);pe();if(!v&&needSwap){clearTimeout(swapT);commitIdle()}$('cleanStatus').textContent=v==='all'?'এক আঙুল দিয়ে ঘষুন—সাদা, কালো ও সব রঙের পিক্সেল স্বচ্ছ হবে; নিচের ম্যাপ দেখা যাবে।':v==='flood'?'ছবির যে রঙটি মুছতে চান, সেই রঙের ওপর একবার টাচ করুন। পুরো ছবিতে ওই রঙের মতো (সহনশীলতার মধ্যে) সব পিক্সেল মুছবে; কালো/অন্য রঙ অক্ষত থাকবে।':'ব্রাশ বন্ধ। Undo দিয়ে শেষ ক্লিনিং ফিরিয়ে আনতে পারবেন।'}$('allBrush').onclick=()=>{setBrush('all');if(selected>=0&&map&&!maps[selected].geo)anchorNow()};$('brushOff').onclick=()=>setBrush('');$('floodBrush').onclick=()=>setBrush('flood');
-function cleanAt(x,y){if(!editCtx||selected<0||!brush)return;const r=img.getBoundingClientRect();if(x<r.left||x>r.right||y<r.top||y>r.bottom)return;const sx=editCanvas.width/r.width,sy=editCanvas.height/r.height,cx=(x-r.left)*sx,cy=(y-r.top)*sy,rad=(+$('brushSize').value)/2*(sx+sy)/2,x0=Math.max(0,Math.floor(cx-rad)),y0=Math.max(0,Math.floor(cy-rad)),x1=Math.min(editCanvas.width,Math.ceil(cx+rad)),y1=Math.min(editCanvas.height,Math.ceil(cy+rad));if(x1<=x0||y1<=y0)return;const d=editCtx.getImageData(x0,y0,x1-x0,y1-y0),a=d.data;let n=0;const dc=70+(+$('darkSens').value)*1.3;if(!curStroke)curStroke={seen:new Set(),idx:[],alpha:[]};for(let yy=0;yy<d.height;yy++)for(let xx=0;xx<d.width;xx++){const dx=x0+xx-cx,dy=y0+yy-cy;if(dx*dx+dy*dy>rad*rad)continue;const k=(yy*d.width+xx)*4,R=a[k],G=a[k+1],B=a[k+2],mx=Math.max(R,G,B),mn=Math.min(R,G),lum=(R+G+B)/3,hit=brush==='all'?true:(brush==='white'?(lum>190&&mx-mn<65):(lum<dc&&mx-mn<110));if(hit&&a[k+3]){const gi=(y0+yy)*editCanvas.width+(x0+xx);if(!curStroke.seen.has(gi)){curStroke.seen.add(gi);curStroke.idx.push(gi);curStroke.alpha.push(a[k+3])}a[k+3]=0;n++}}editCtx.putImageData(d,x0,y0);if(n){if(!liveOn)startLive();dirty=true;needSwap=true;editVer++;$('cleanStatus').textContent=n+'টি পিক্সেল স্বচ্ছ করা হয়েছে। ব্রাশের এই কাজটি Undo-তে সংরক্ষিত হবে।'}else $('cleanStatus').textContent='ব্রাশের রঙের সীমায় পিক্সেল মেলেনি; সাইজ বাড়িয়ে চেষ্টা করুন।'}
+function setBrush(v){if(v&&selected>=0&&maps[selected]?.locked){status.textContent='এই ম্যাপটি লক করা আছে। কাজ করতে আগে আনলক করুন।';return}brush=v;phase='idle';$('allBrush').classList.toggle('on',v==='all');$('floodBrush').classList.toggle('on',v==='flood');$('brushOff').classList.toggle('on',!v);pe();if(!v&&needSwap){clearTimeout(swapT);commitIdle()}$('cleanStatus').textContent=v==='all'?'এক আঙুল দিয়ে ঘষুন—সাদা, কালো ও সব রঙের অংশ সত্যিকারের স্বচ্ছ হবে; কালো রঙ আঁকা হবে না, নিচের ম্যাপ দেখা যাবে।':v==='flood'?'ছবির যে রঙটি মুছতে চান, সেই রঙের ওপর একবার টাচ করুন। পুরো ছবিতে ওই রঙের মতো (সহনশীলতার মধ্যে) সব পিক্সেল মুছবে; কালো/অন্য রঙ অক্ষত থাকবে।':'ব্রাশ বন্ধ। Undo দিয়ে শেষ ক্লিনিং ফিরিয়ে আনতে পারবেন।'}$('allBrush').onclick=()=>{setBrush('all');if(selected>=0&&map&&!maps[selected].geo)anchorNow()};$('brushOff').onclick=()=>setBrush('');$('floodBrush').onclick=()=>setBrush('flood');
+function cleanAt(x,y){
+ if(!editCtx||selected<0||brush!=='all')return;
+ const r=img.getBoundingClientRect();
+ if(x<r.left||x>r.right||y<r.top||y>r.bottom)return;
+ const sx=editCanvas.width/r.width,sy=editCanvas.height/r.height;
+ const cx=(x-r.left)*sx,cy=(y-r.top)*sy;
+ const rad=(+$('brushSize').value)/2*(sx+sy)/2;
+ const x0=Math.max(0,Math.floor(cx-rad)),y0=Math.max(0,Math.floor(cy-rad));
+ const x1=Math.min(editCanvas.width,Math.ceil(cx+rad)),y1=Math.min(editCanvas.height,Math.ceil(cy+rad));
+ if(x1<=x0||y1<=y0)return;
+ const d=editCtx.getImageData(x0,y0,x1-x0,y1-y0),a=d.data;
+ if(!curStroke)curStroke={seen:new Set(),idx:[],alpha:[]};
+ let n=0;
+ for(let yy=0;yy<d.height;yy++)for(let xx=0;xx<d.width;xx++){
+  const dx=x0+xx-cx,dy=y0+yy-cy;
+  if(dx*dx+dy*dy>rad*rad)continue;
+  const k=(yy*d.width+xx)*4,gi=(y0+yy)*editCanvas.width+(x0+xx);
+  if(a[k+3]&&!curStroke.seen.has(gi)){
+   curStroke.seen.add(gi);curStroke.idx.push(gi);curStroke.alpha.push(a[k+3]);n++;
+  }
+ }
+ if(!n)return;
+ // প্রকৃত transparent eraser: কালো রঙ আঁকে না, ক্যানভাসের alpha মুছে দেয়।
+ editCtx.save();editCtx.globalCompositeOperation='destination-out';
+ editCtx.beginPath();editCtx.arc(cx,cy,rad,0,Math.PI*2);editCtx.fill();editCtx.restore();
+ if(!liveOn)startLive();dirty=true;needSwap=true;editVer++;
+ $('cleanStatus').textContent=n.toLocaleString('bn-BD')+'টি পিক্সেল স্বচ্ছ করা হয়েছে। নিচের ম্যাপ দেখা যাবে; এই ব্রাশের কাজ Undo-তে থাকবে।';
+}
 let floodBusy=false;
 const floodYield=()=>new Promise(resolve=>setTimeout(resolve,0));
 // এক টাচে এলাকা ক্লিয়ার হলো আলাদা টুল; সাদা/কালো ঘষার ব্রাশ আগের মতোই থাকে।
