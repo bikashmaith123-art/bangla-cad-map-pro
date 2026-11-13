@@ -150,7 +150,33 @@ $('projectFile').onchange=async()=>{const f=$('projectFile').files[0];if(!f)retu
 $('panelToggle').onclick=()=>{const panel=$('panel'),collapsed=panel.classList.toggle('collapsed');$('panelToggle').textContent=collapsed?'☰ কন্ট্রোল খুলুন':'⌄ নিচে লুকান';};
 $('openProject').onclick=async()=>{const id=$('projectSelect').value;if(!id)return;const p=await req('readonly',s=>s.get(id));if(!p)return;projectId=p.id;$('projectName').value=p.name;maps=p.maps||[];maps.forEach(m=>{m.locked=m.geo?true:!!m.locked;if(m.geo)m.positionFixed=true});await prepMaps();selected=maps.length?0:-1;showMap(selected);status.textContent=`${p.name} প্রজেক্ট খোলা হয়েছে — ${maps.length}টি ম্যাপ।`};
 $('renameMap').onclick=()=>{if(selected<0)return;const n=prompt('এই ম্যাপের নতুন নাম লিখুন',maps[selected].name);if(n&&n.trim()){maps[selected].name=n.trim();maps[selected].nameEdited=true;$('selectedTitle').textContent=`Map ${String(maps[selected].serial).padStart(3,'0')} — ${n.trim()}`;renderList()}};
-$('deleteMap').onclick=()=>{if(selected<0)return;if(!confirm('এই ম্যাপটি প্রজেক্ট থেকে ডিলিট করবেন?'))return;maps.splice(selected,1);maps.forEach((m,i)=>m.serial=i+1);showMap(maps.length?Math.min(selected,maps.length-1):-1)};
+let deletingMap=false;
+$('deleteMap').onclick=async()=>{
+ if(deletingMap||selected<0||!maps[selected])return;
+ if(!confirm('এই ম্যাপটি প্রজেক্ট থেকে ডিলিট করবেন?'))return;
+ deletingMap=true;const btn=$('deleteMap');btn.disabled=true;
+ const deletedIndex=selected,deleted=maps[deletedIndex],deletedId=deleted.id;
+ try{
+  // ডিলিট হওয়া ছবির এডিট-ক্যানভাসকে PNG-তে রূপান্তর করার দরকার নেই।
+  // বড় ছবিতে toDataURL() Android-কে আটকে দিতে পারে।
+  clearTimeout(swapT);needSwap=false;curStroke=null;drawing=false;dirty=false;liveOff();
+  if(deletedId&&ghosts.has(deletedId)){const el=ghosts.get(deletedId);el.remove();ghosts.delete(deletedId)}
+  deleted.data='';maps.splice(deletedIndex,1);
+  maps.forEach((m,i)=>m.serial=i+1);
+  selected=maps.length?Math.min(deletedIndex,maps.length-1):-1;
+  undoStack=(selected>=0&&Array.isArray(maps[selected].undoStack))?maps[selected].undoStack:[];updUndo();
+  // নির্বাচিত ছবির পুরনো src আগে ছেড়ে দিই, তারপর পরের ছবি দেখাই।
+  img.onload=null;img.onerror=null;img.removeAttribute('src');img.style.display='none';
+  showMap(selected);
+  // আগে সেভ করা প্রজেক্ট হলে ডিলিট সঙ্গে সঙ্গে IndexedDB-তে লিখে দিই।
+  if(projectId&&db){
+   const saved=await req('readonly',st=>st.get(projectId));
+   if(saved){saved.maps=maps;saved.updated=Date.now();saved.name=$('projectName').value.trim()||saved.name;await req('readwrite',st=>st.put(saved));refreshProjects();status.textContent='ম্যাপটি ডিলিট হয়েছে এবং সেভ করা প্রজেক্টেও পরিবর্তন সংরক্ষিত হয়েছে।';}
+   else status.textContent='ম্যাপটি বর্তমান প্রজেক্ট থেকে ডিলিট হয়েছে। স্থায়ীভাবে রাখতে “প্রজেক্ট সেভ” চাপুন।';
+  }else status.textContent='ম্যাপটি ডিলিট হয়েছে। স্থায়ীভাবে রাখতে “প্রজেক্ট সেভ” চাপুন।';
+ }catch(e){status.textContent='ডিলিট করতে সমস্যা হয়েছে: '+e.message;}
+ finally{deletingMap=false;btn.disabled=false;renderList()}
+};
 $('opacity').oninput=()=>{if(selected<0)return;maps[selected].opacity=+$('opacity').value;setOp(maps[selected].opacity/100);$('opVal').value=maps[selected].opacity+'%'};function updateVisual(){if(selected<0)return;const m=maps[selected];img.style.filter=visualFilter(m);live.style.filter=img.style.filter;const g=ghosts.get(m.id);if(g)g.style.filter=img.style.filter}
 $('brightness').oninput=()=>{if(selected<0)return;maps[selected].brightness=+$('brightness').value;$('brVal').value=maps[selected].brightness+'%';updateVisual()};$('contrast').oninput=()=>{if(selected<0)return;maps[selected].contrast=+$('contrast').value;$('ctVal').value=maps[selected].contrast+'%';updateVisual()};$('saturation').oninput=()=>{if(selected<0)return;maps[selected].saturation=+$('saturation').value;$('satVal').value=maps[selected].saturation+'%';updateVisual()};$('resetImageLook').onclick=()=>{if(selected<0)return;const m=maps[selected];m.opacity=65;m.brightness=100;m.contrast=100;m.saturation=100;$('opacity').value=65;$('brightness').value=100;$('contrast').value=100;$('saturation').value=100;$('opVal').value='৬৫%';$('brVal').value='১০০%';$('ctVal').value='১০০%';$('satVal').value='১০০%';setOp(.65);updateVisual()};
 const live=editCanvas;live.id='liveCv';$('imageLayer').appendChild(live);
