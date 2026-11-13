@@ -34,14 +34,32 @@ $('upload').onclick=$('addMaps').onclick=()=>file.click();file.onchange=async()=
 $('newProject').onclick=()=>{maps=[];selected=-1;projectId=uid();$('projectName').value='';showMap(-1);status.textContent='নতুন প্রজেক্ট তৈরি হয়েছে। নাম লিখে ম্যাপ আপলোড করুন।'};
 // KMZ প্যাকেজ: doc.kml + project.json (এর মধ্যে সব ম্যাপের ছবি সংরক্ষিত থাকে)
 const te=new TextEncoder();
-function crc32(bytes){let c=-1;for(let i=0;i<bytes.length;i++){c^=bytes[i];for(let j=0;j<8;j++)c=(c>>>1)^((c&1)?0xedb88320:0)}return (c^-1)>>>0}
+const CRC_T=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xedb88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+function crc32(bytes){let c=0xffffffff;for(let i=0;i<bytes.length;i++)c=CRC_T[(c^bytes[i])&255]^(c>>>8);return (c^0xffffffff)>>>0}
 function u16(v){return [v&255,(v>>>8)&255]}function u32(v){return [v&255,(v>>>8)&255,(v>>>16)&255,(v>>>24)&255]}
 function joinBytes(parts){let n=parts.reduce((a,b)=>a+b.length,0),o=new Uint8Array(n),k=0;for(const b of parts){o.set(b,k);k+=b.length}return o}
-function makeZip(files){let locals=[],centrals=[],offset=0;for(const f of files){const name=te.encode(f.name),data=typeof f.data==='string'?te.encode(f.data):f.data,crc=crc32(data);const local=joinBytes([new Uint8Array([0x50,0x4b,0x03,0x04]),new Uint8Array([...u16(20),...u16(0),...u16(0),...u16(0),...u16(0),...u32(crc),...u32(data.length),...u32(data.length),...u16(name.length),...u16(0)]),name,data]);locals.push(local);const central=joinBytes([new Uint8Array([0x50,0x4b,0x01,0x02]),new Uint8Array([...u16(20),...u16(20),...u16(0),...u16(0),...u16(0),...u16(0),...u32(crc),...u32(data.length),...u32(data.length),...u16(name.length),...u16(0),...u16(0),...u16(0),...u32(0),...u32(offset)]),name]);centrals.push(central);offset+=local.length}const cd=joinBytes(centrals),body=joinBytes(locals),end=joinBytes([new Uint8Array([0x50,0x4b,0x05,0x06]),new Uint8Array([...u16(0),...u16(0),...u16(files.length),...u16(files.length),...u32(cd.length),...u32(body.length),...u16(0)])]);return joinBytes([body,cd,end])}
+async function makeZip(files){
+ const parts=[],centrals=[];let offset=0;
+ for(const f of files){
+  const name=te.encode(f.name);
+  let bytes,keep;
+  if(typeof f.data==='string'){bytes=te.encode(f.data);keep=bytes}
+  else if(f.data instanceof Blob){bytes=new Uint8Array(await f.data.arrayBuffer());keep=f.data}
+  else{bytes=f.data;keep=bytes}
+  const crc=crc32(bytes),size=bytes.length;
+  const lh=new Uint8Array([0x50,0x4b,0x03,0x04,...u16(20),...u16(0),...u16(0),...u16(0),...u16(0),...u32(crc),...u32(size),...u32(size),...u16(name.length),...u16(0),...name]);
+  const ch=new Uint8Array([0x50,0x4b,0x01,0x02,...u16(20),...u16(20),...u16(0),...u16(0),...u16(0),...u16(0),...u32(crc),...u32(size),...u32(size),...u16(name.length),...u16(0),...u16(0),...u16(0),...u16(0),...u32(0),...u32(offset),...name]);
+  centrals.push(ch);parts.push(lh,keep);offset+=lh.length+size;
+  if(offset>4200000000)throw Error('মোট সাইজ ৪ জিবির কাছাকাছি—এক KMZ-তে ধরবে না। ম্যাপ দুই ভাগ করে আলাদা প্রজেক্টে সেভ করুন।');
+ }
+ const cdSize=centrals.reduce((a,b)=>a+b.length,0);
+ const end=new Uint8Array([0x50,0x4b,0x05,0x06,...u16(0),...u16(0),...u16(files.length),...u16(files.length),...u32(cdSize),...u32(offset),...u16(0)]);
+ return new Blob([...parts,...centrals,end],{type:'application/vnd.google-earth.kmz'});
+}
 async function readZipEntry(buf,wanted){const v=new DataView(buf);let e=-1;for(let i=buf.byteLength-22;i>=Math.max(0,buf.byteLength-65558);i--){if(v.getUint32(i,true)===0x06054b50){e=i;break}}if(e<0)throw Error('এটি সঠিক KMZ/ZIP ফাইল নয়');const count=v.getUint16(e+10,true),cdOff=v.getUint32(e+16,true);let pos=cdOff;for(let i=0;i<count;i++){if(v.getUint32(pos,true)!==0x02014b50)throw Error('KMZ সূচি পড়া যায়নি');const method=v.getUint16(pos+10,true),csize=v.getUint32(pos+20,true),nlen=v.getUint16(pos+28,true),elen=v.getUint16(pos+30,true),clen=v.getUint16(pos+32,true),lo=v.getUint32(pos+42,true),name=new TextDecoder().decode(new Uint8Array(buf,pos+46,nlen));if(name===wanted){const nl=v.getUint16(lo+26,true),el=v.getUint16(lo+28,true),data=new Uint8Array(buf,lo+30+nl+el,csize);if(method===0)return data;if(method===8&&'DecompressionStream'in window){const ds=new DecompressionStream('deflate-raw'),stream=new Blob([data]).stream().pipeThrough(ds);return new Uint8Array(await new Response(stream).arrayBuffer())}throw Error('এই KMZ-এর compression এই ব্রাউজারে খোলা যাচ্ছে না')}pos+=46+nlen+elen+clen}throw Error('KMZ ফাইলে Bangla CAD প্রজেক্ট পাওয়া যায়নি')}
-async function overlayQuadTag(m,path,label){
+async function overlayQuadTag(m,path,label,dims){
  const q=m.geo;if(!q||!map)return '';
- const im=new Image();im.src=m.data;try{await im.decode()}catch(_){return ''}
+ let im;if(dims&&dims.w&&dims.h)im={naturalWidth:dims.w,naturalHeight:dims.h};else{im=new Image();im.src=m.data;try{await im.decode()}catch(_){return ''}}
  const w=Math.max(1,Number(q.w)||1),h=w*(im.naturalHeight/Math.max(1,im.naturalWidth));
  const z=Number(q.z0)||map.getZoom(),c=map.project([q.lat,q.lng],z),a=Number(q.th)||0,cs=Math.cos(a),sn=Math.sin(a);
  const xy=[[-w/2,-h/2],[w/2,-h/2],[w/2,h/2],[-w/2,h/2]].map(([x,y])=>L.point(c.x+x*cs-y*sn,c.y+x*sn+y*cs));
@@ -56,17 +74,36 @@ async function imageDataToPngBlob(dataUrl){
  const ctx=c.getContext('2d',{alpha:false});ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(im,0,0);
  return await new Promise((resolve,reject)=>c.toBlob(b=>b?resolve(b):reject(new Error('PNG তৈরি করা যায়নি')),'image/png'));
 }
+async function imageDataToPng(dataUrl){
+ const im=new Image();im.src=dataUrl;await im.decode();
+ const c=document.createElement('canvas');c.width=im.naturalWidth;c.height=im.naturalHeight;
+ const ctx=c.getContext('2d',{alpha:false});ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(im,0,0);
+ const blob=await new Promise((resolve,reject)=>c.toBlob(b=>b?resolve(b):reject(new Error('PNG তৈরি করা যায়নি')),'image/png'));
+ const w=c.width,h=c.height;c.width=c.height=1;
+ return {blob,w,h};
+}
+// ২০০–৩০০ ম্যাপের জন্য: ছবি একে একে প্রসেস হয়, মেমরিতে সব একসঙ্গে জমে না।
+// ভিতরে: doc.kml (Google Earth), images/ (Google Earth-এর PNG), data/ (এডিটের জন্য মূল ছবি), project.json (ছোট, ছবি ছাড়া)
 async function makeKmz(project){
- const payload=JSON.stringify({format:'BanglaCADOverlayProject',version:3,name:project.name,maps:project.maps});
- const files=[{name:'project.json',data:payload}],overlays=[];
- for(let i=0;i<project.maps.length;i++){
-  const m=project.maps[i]; if(!m.data)continue;
-  const path=`images/map_${String(i+1).padStart(3,'0')}.png`;
-  const blob=await imageDataToPngBlob(m.data); files.push({name:path,data:new Uint8Array(await blob.arrayBuffer())});
-  if(m.geo&&map){overlays.push(await overlayQuadTag(m,path,m.fileName||m.name||`Map ${i+1}`));}
+ const list=project.maps,total=list.length,pad=n=>String(n).padStart(3,'0'),tick=()=>new Promise(r=>setTimeout(r,0));
+ const files=[],overlays=[],slim=[];
+ for(let i=0;i<total;i++){
+  const m=list[i];status.textContent=`KMZ তৈরি হচ্ছে ${i+1}/${total}…`;await tick();
+  const c={...m};delete c.undoStack;
+  if(m.data){
+   const mime=(String(m.data).match(/^data:([^;,]+)/)||[])[1]||'image/png';
+   const ext=mime==='image/jpeg'?'jpg':mime==='image/webp'?'webp':'png';
+   const dPath=`data/map_${pad(i+1)}.${ext}`,path=`images/map_${pad(i+1)}.png`;
+   files.push({name:dPath,data:await (await fetch(m.data)).blob()});c.dataRef=dPath;
+   const info=await imageDataToPng(m.data);files.push({name:path,data:info.blob});
+   if(m.geo&&map)overlays.push(await overlayQuadTag(m,path,m.fileName||m.name||`Map ${i+1}`,{w:info.w,h:info.h}));
+  }
+  delete c.data;slim.push(c);
  }
+ status.textContent='KMZ ফাইল জোড়া লাগানো হচ্ছে…';await tick();
+ const payload=JSON.stringify({format:'BanglaCADOverlayProject',version:4,name:project.name,maps:slim});
  const kml=`<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2"><Document><name>${esc(project.name)}</name><description>Bangla CAD Map Pro KMZ. Map images are included as GroundOverlay. Project editing data is in project.json.</description>${overlays.join('')}</Document></kml>`;
- files.unshift({name:'doc.kml',data:kml}); return makeZip(files)
+ return makeZip([{name:'doc.kml',data:kml},{name:'project.json',data:payload},...files]);
 }
 async function makeKmlFiles(project){
  const overlays=[],downloads=[];
@@ -80,7 +117,7 @@ async function makeKmlFiles(project){
  return {kml,downloads};
 }
 function downloadBlob(blob,name){const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),60000)}
-$('exportKml').onclick=async()=>{try{flushEdit();if(!maps.length){status.textContent='আগে প্রজেক্টে ম্যাপ যোগ করুন।';return}maps.forEach(m=>{if(m.geo){m.positionFixed=true;m.locked=true}});const p={name:$('projectName').value.trim()||'প্রজেক্ট',maps};status.textContent='KML ও ছবির ফাইল তৈরি হচ্ছে…';const {kml,downloads}=await makeKmlFiles(p);const base=(p.name.replace(/[^\p{L}\p{N}_-]+/gu,'_')||'Bangla_CAD_Project');downloadBlob(new Blob([kml],{type:'application/vnd.google-earth.kml+xml'}),base+'.kml');downloads.forEach((d,i)=>setTimeout(()=>downloadBlob(d.blob,d.name),700*(i+1)));status.textContent=`KML তৈরি হয়েছে। ${downloads.length}টি ছবিও আলাদা ডাউনলোড হবে। KML ও সব ছবি একই ফোল্ডারে রাখবেন। মোবাইল Chrome একাধিক ডাউনলোডের অনুমতি চাইলে Allow দিন।`;}catch(e){status.textContent='KML তৈরি করা যায়নি: '+e.message}};
+$('exportKml').onclick=async()=>{try{flushEdit();if(!maps.length){status.textContent='আগে প্রজেক্টে ম্যাপ যোগ করুন।';return}maps.forEach(m=>{if(m.geo){m.positionFixed=true;m.locked=true}});if(maps.length>25){status.textContent=`${maps.length}টি ম্যাপের জন্য আলাদা ছবির ফাইল নামানো ব্যবহারযোগ্য নয়। “KMZ সেভ (ছবিসহ)” ব্যবহার করুন—সব ম্যাপ এক ফাইলে Google Earth-এ খুলবে।`;return}const p={name:$('projectName').value.trim()||'প্রজেক্ট',maps};status.textContent='KML ও ছবির ফাইল তৈরি হচ্ছে…';const {kml,downloads}=await makeKmlFiles(p);const base=(p.name.replace(/[^\p{L}\p{N}_-]+/gu,'_')||'Bangla_CAD_Project');downloadBlob(new Blob([kml],{type:'application/vnd.google-earth.kml+xml'}),base+'.kml');downloads.forEach((d,i)=>setTimeout(()=>downloadBlob(d.blob,d.name),700*(i+1)));status.textContent=`KML তৈরি হয়েছে। ${downloads.length}টি ছবিও আলাদা ডাউনলোড হবে। KML ও সব ছবি একই ফোল্ডারে রাখবেন। মোবাইল Chrome একাধিক ডাউনলোডের অনুমতি চাইলে Allow দিন।`;}catch(e){status.textContent='KML তৈরি করা যায়নি: '+e.message}};
 async function saveProjectFile(project){
  const safe=(project.name.replace(/[^\p{L}\p{N}_-]+/gu,'_')||'Bangla_CAD_Project')+'.kmz';const bytes=await makeKmz(project),blob=new Blob([bytes],{type:'application/vnd.google-earth.kmz'});
  if(window.showSaveFilePicker){try{const h=await window.showSaveFilePicker({suggestedName:safe,types:[{description:'Google Earth KMZ',accept:{'application/vnd.google-earth.kmz':['.kmz']}}]});const w=await h.createWritable();await w.write(blob);await w.close();saveHandle=h;return 'KMZ ফাইলটি আপনার নির্বাচিত লোকেশনে সেভ হয়েছে।'}catch(e){if(e&&e.name==='AbortError')return 'লোকেশন নির্বাচন বাতিল হয়েছে; ব্রাউজারের ভেতরের প্রজেক্ট সেভ রাখা হয়েছে।';throw e}}
@@ -89,7 +126,7 @@ async function saveProjectFile(project){
 $('saveProject').onclick=async()=>{try{flushEdit();if(!maps.length){status.textContent='সেভ করার আগে অন্তত একটি ম্যাপ আপলোড করুন।';return}const name=$('projectName').value.trim()||'নামহীন প্রজেক্ট';projectId=projectId||uid();maps.forEach(m=>{if(m.geo){m.positionFixed=true;m.locked=true}});const p={id:projectId,name,updated:Date.now(),maps};await req('readwrite',s=>s.put(p));refreshProjects();status.textContent=`“${name}” — ${maps.length}টি ম্যাপসহ প্রজেক্ট এই ব্রাউজারে সেভ হয়েছে। KML বা KMZ আলাদা করে ডাউনলোড করতে সংশ্লিষ্ট বোতাম চাপুন।`}catch(e){status.textContent='সেভ করা যায়নি: '+e.message+'। জায়গা কম থাকলে কম ছবি দিয়ে চেষ্টা করুন।'}};
 $('exportProject').onclick=async()=>{let u='';try{flushEdit();if(!maps.length){status.textContent='আগে প্রজেক্টে ম্যাপ যোগ করুন।';return}maps.forEach(m=>{if(m.geo){m.positionFixed=true;m.locked=true}});const p={format:'BanglaCADOverlayProject',version:3,name:$('projectName').value.trim()||'প্রজেক্ট',maps};status.textContent='Google Earth-উপযোগী KMZ তৈরি হচ্ছে…';const bytes=await makeKmz(p),blob=new Blob([bytes],{type:'application/vnd.google-earth.kmz'});u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=(p.name.replace(/[^\p{L}\p{N}_-]+/gu,'_')||'Bangla_CAD_Project')+'.kmz';document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(u)},60000);status.textContent='KMZ তৈরি হয়েছে। অ্যালাইন করা ম্যাপের GroundOverlay ছবিও ফাইলে আছে—Google Earth-এ খোলা যাবে।'}catch(e){if(u)URL.revokeObjectURL(u);status.textContent='KMZ তৈরি/ডাউনলোড করা যায়নি: '+e.message}};
 $('importProject').onclick=()=>$('projectFile').click();
-async function zipEntries(buffer){
+async function zipEntriesCentral(buffer){
  const v=new DataView(buffer),u8=new Uint8Array(buffer);let e=-1;
  for(let i=buffer.byteLength-22;i>=Math.max(0,buffer.byteLength-65558);i--)if(v.getUint32(i,true)===0x06054b50){e=i;break}
  if(e<0)throw Error('KMZ ফাইলের ZIP সূচি পড়া যায়নি—ফাইলটি অসম্পূর্ণ বা ক্ষতিগ্রস্ত হতে পারে।');
@@ -99,7 +136,7 @@ async function zipEntries(buffer){
   const flags=v.getUint16(pos+8,true),method=v.getUint16(pos+10,true),cs=v.getUint32(pos+20,true),nl=v.getUint16(pos+28,true),el=v.getUint16(pos+30,true),cl=v.getUint16(pos+32,true),lo=v.getUint32(pos+42,true),name=new TextDecoder().decode(u8.slice(pos+46,pos+46+nl)).replace(/\\/g,'/');
   if(flags&1)throw Error('এই KMZ পাসওয়ার্ড-সুরক্ষিত; পাসওয়ার্ড ছাড়া খোলা যাবে না।');
   if(lo+30>u8.length||v.getUint32(lo,true)!==0x04034b50)throw Error('KMZ-এর একটি ফাইলের ডেটা পড়া যাচ্ছে না: '+name);
-  const lnl=v.getUint16(lo+26,true),lel=v.getUint16(lo+28,true),begin=lo+30+lnl+lel,data=u8.slice(begin,begin+cs);
+  const lnl=v.getUint16(lo+26,true),lel=v.getUint16(lo+28,true),begin=lo+30+lnl+lel,data=u8.subarray(begin,begin+cs);
   if(method===0)out[name]=data;
   else if(method===8){
    if(!('DecompressionStream'in window))throw Error('এই Android Chrome-এ ZIP/Deflate খুলবার সুবিধা নেই। Chrome আপডেট করে আবার চেষ্টা করুন।');
@@ -109,6 +146,42 @@ async function zipEntries(buffer){
   pos+=46+nl+el+cl;
  }
  return out
+}
+async function inflateRaw(data,name){
+ if(!('DecompressionStream'in window))throw Error('এই ব্রাউজারে ZIP/Deflate খুলবার সুবিধা নেই। Chrome আপডেট করে আবার চেষ্টা করুন।');
+ try{const ds=new DecompressionStream('deflate-raw');return new Uint8Array(await new Response(new Blob([data]).stream().pipeThrough(ds)).arrayBuffer())}
+ catch(err){throw Error('KMZ-এর compressed data খুলতে সমস্যা হয়েছে ('+name+'): '+err.message)}
+}
+// ফাইল-তালিকা (central directory) নষ্ট হলে ফাইলের শুরু থেকে একে একে পড়ে উদ্ধার করে
+async function zipEntriesScan(buffer){
+ const v=new DataView(buffer),u8=new Uint8Array(buffer),out={};let pos=0;
+ while(pos+30<=u8.length&&v.getUint32(pos,true)===0x04034b50){
+  const flags=v.getUint16(pos+6,true),method=v.getUint16(pos+8,true),cs=v.getUint32(pos+18,true),nl=v.getUint16(pos+26,true),el=v.getUint16(pos+28,true);
+  if(flags&1)throw Error('এই KMZ পাসওয়ার্ড-সুরক্ষিত; পাসওয়ার্ড ছাড়া খোলা যাবে না।');
+  if(flags&8)throw Error('KMZ-এর ফাইল তালিকা নষ্ট এবং উদ্ধার করা সম্ভব হয়নি।');
+  const name=new TextDecoder().decode(u8.slice(pos+30,pos+30+nl)).replace(/\\/g,'/'),begin=pos+30+nl+el;
+  if(begin+cs>u8.length)throw Error('KMZ ফাইলটি অসম্পূর্ণ—ডাউনলোড বা কপি আবার করুন।');
+  const data=u8.subarray(begin,begin+cs);
+  if(method===0)out[name]=data;else if(method===8)out[name]=await inflateRaw(data,name);else throw Error('KMZ-এ অসমর্থিত compression পদ্ধতি আছে ('+method+'): '+name);
+  pos=begin+cs;
+ }
+ if(!Object.keys(out).length)throw Error('KMZ ফাইলের ZIP সূচি পড়া যায়নি—ফাইলটি ক্ষতিগ্রস্ত হতে পারে।');
+ return out
+}
+async function zipEntries(buffer){
+ try{return await zipEntriesCentral(buffer)}
+ catch(err){try{return await zipEntriesScan(buffer)}catch(e2){throw err}}
+}
+function bytesToDataUrl(bytes,mime){return new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.onerror=()=>rej(fr.error||new Error('ছবি পড়া যায়নি'));fr.readAsDataURL(new Blob([bytes],{type:mime}))})}
+async function rehydrateMaps(list,entries){
+ for(let i=0;i<list.length;i++){const m=list[i];
+  if(!m.data&&m.dataRef&&entries&&entries[m.dataRef]){
+   status.textContent=`ম্যাপ লোড হচ্ছে ${i+1}/${list.length}…`;await new Promise(r=>setTimeout(r,0));
+   const ext=(m.dataRef.split('.').pop()||'png').toLowerCase(),mime=ext==='jpg'||ext==='jpeg'?'image/jpeg':ext==='webp'?'image/webp':'image/png';
+   m.data=await bytesToDataUrl(entries[m.dataRef],mime);delete entries[m.dataRef];
+  }
+  delete m.dataRef;
+ }
 }
 function bytesBase64(bytes){let bin='';for(let i=0;i<bytes.length;i+=0x8000)bin+=String.fromCharCode(...bytes.subarray(i,i+0x8000));return btoa(bin)}
 function kmlTextToMaps(xml,files,name){
@@ -135,15 +208,15 @@ function kmlTextToMaps(xml,files,name){
  return out
 }
 $('projectFile').onchange=async()=>{const f=$('projectFile').files[0];if(!f)return;try{
- let p=null,imported=[];
+ let p=null,imported=[],entries=null;
  if(/\.json$/i.test(f.name)){p=JSON.parse(await f.text())}
  else if(/\.kml$/i.test(f.name)){imported=kmlTextToMaps(await f.text(),{},f.name)}
  else if(/\.(kmz|zip)$/i.test(f.name)){
-  const entries=await zipEntries(await f.arrayBuffer());
+  entries=await zipEntries(await f.arrayBuffer());
   if(entries['project.json']){p=JSON.parse(new TextDecoder().decode(entries['project.json']))}
   else{const kmlKey=Object.keys(entries).find(k=>/\.kml$/i.test(k));if(!kmlKey)throw Error('KMZ-এর ভিতরে doc.kml বা KML ফাইল পাওয়া যায়নি');imported=kmlTextToMaps(new TextDecoder().decode(entries[kmlKey]),entries,f.name)}
  }else throw Error('শুধু .KML, .KMZ, .ZIP অথবা JSON ফাইল নির্বাচন করুন');
- if(p){if(p.format!=='BanglaCADOverlayProject'||!Array.isArray(p.maps))throw Error('ভুল Bangla CAD প্রজেক্ট');maps=p.maps;maps.forEach((m,i)=>{m.serial=m.serial||i+1;if(m.fileName&&!m.nameEdited)m.name=m.fileName;m.locked=m.geo?true:!!m.locked;if(m.geo)m.positionFixed=true});await prepMaps();$('projectName').value=p.name||f.name.replace(/\.(kmz|json)$/i,'');status.textContent='Bangla CAD প্রজেক্টের সব ম্যাপ ও এডিটিং সেটিংস খোলা হয়েছে।'}
+ if(p){if(p.format!=='BanglaCADOverlayProject'||!Array.isArray(p.maps))throw Error('ভুল Bangla CAD প্রজেক্ট');maps=p.maps;await rehydrateMaps(maps,entries);maps=maps.filter(m=>m.data);maps.forEach((m,i)=>{m.serial=m.serial||i+1;if(m.fileName&&!m.nameEdited)m.name=m.fileName;m.locked=m.geo?true:!!m.locked;if(m.geo)m.positionFixed=true});await prepMaps();$('projectName').value=p.name||f.name.replace(/\.(kmz|json)$/i,'');status.textContent='Bangla CAD প্রজেক্টের সব ম্যাপ ও এডিটিং সেটিংস খোলা হয়েছে।'}
  else{if(!imported.length)throw Error('এই KML/KMZ-এ ব্যবহারযোগ্য GroundOverlay ছবি পাওয়া যায়নি। শুধু Placemark/রেখা থাকলে এই সংস্করণে ছবি হিসেবে আমদানি হবে না।');maps=imported;maps.forEach((m,i)=>m.serial=i+1);$('projectName').value=f.name.replace(/\.(kml|kmz|zip)$/i,'');status.textContent=`${maps.length}টি KML GroundOverlay ম্যাপ আমদানি হয়েছে। যেগুলোর স্থানাঙ্ক ছিল সেগুলো মানচিত্রে বসানো হয়েছে।`}
  projectId=uid();showMap(maps.length?0:-1);renderList();
  }catch(e){status.textContent='ফাইল খোলা যায়নি: '+e.message} $('projectFile').value=''};
@@ -221,8 +294,9 @@ $('undoBtn').onclick=()=>{if(!undoStack.length||selected<0)return;const e=undoSt
 function commitIdle(){if(needSwap&&!drawing&&!bptrs.size&&selected>=0&&editCanvas.width){needSwap=false;commitLive()}}
 const ghostLayer=document.createElement('div');ghostLayer.id='ghostLayer';ghostLayer.style.cssText='position:absolute;inset:0;pointer-events:none';$('imageLayer').insertBefore(ghostLayer,img);
 const ghosts=new Map();
-function ghostPlace(el,m){el.style.transition='none';if(m.geo&&map){const q=m.geo,pt=map.latLngToContainerPoint([q.lat,q.lng]),f=Math.pow(2,map.getZoom()-q.z0);el.style.left=pt.x+'px';el.style.top=pt.y+'px';el.style.width=Math.max(4,q.w*f)+'px';el.style.maxWidth='none';el.style.maxHeight='none';el.style.transform=`translate(-50%,-50%) rotate(${q.th*180/Math.PI}deg)`}else{el.style.left=(m.left||50)+'%';el.style.top=(m.top||50)+'%';el.style.width=m.width||'auto';el.style.maxWidth=m.maxWidth||'82vw';el.style.maxHeight=m.maxHeight||'65vh';el.style.transform=m.transform||'translate(-50%,-50%)'}}
-function renderGhosts(){const keep=new Set();maps.forEach((m,i)=>{if(i===selected||m.on===false)return;m.id=m.id||uid();keep.add(m.id);let el=ghosts.get(m.id);if(!el){el=document.createElement('img');el.className='ghost';el.src=m.data;ghostLayer.appendChild(el);ghosts.set(m.id,el)}el.style.opacity=(m.opacity??65)/100;el.style.filter=visualFilter(m);el.style.zIndex=String(i+1);el.decoding='async';ghostPlace(el,m)});for(const [id,el] of [...ghosts]){if(!keep.has(id)){el.remove();ghosts.delete(id)}}}
+function ghostShow(el,m,on){if(on){if(el.dataset.off==='1'){el.dataset.off='0';el.src=m.data}el.style.display=''}else{if(el.dataset.off!=='1'){el.dataset.off='1';el.removeAttribute('src')}el.style.display='none'}}
+function ghostPlace(el,m){el.style.transition='none';if(m.geo&&map){const q=m.geo,pt=map.latLngToContainerPoint([q.lat,q.lng]),f=Math.pow(2,map.getZoom()-q.z0);const sz=map.getSize(),half=Math.hypot(sz.x,sz.y)/2,rad=q.w*f*0.5*Math.sqrt(1+Math.pow(el._asp||3,2));ghostShow(el,m,Math.hypot(pt.x-sz.x/2,pt.y-sz.y/2)<=rad+half);el.style.left=pt.x+'px';el.style.top=pt.y+'px';el.style.width=Math.max(4,q.w*f)+'px';el.style.maxWidth='none';el.style.maxHeight='none';el.style.transform=`translate(-50%,-50%) rotate(${q.th*180/Math.PI}deg)`}else{ghostShow(el,m,true);el.style.left=(m.left||50)+'%';el.style.top=(m.top||50)+'%';el.style.width=m.width||'auto';el.style.maxWidth=m.maxWidth||'82vw';el.style.maxHeight=m.maxHeight||'65vh';el.style.transform=m.transform||'translate(-50%,-50%)'}}
+function renderGhosts(){const keep=new Set();maps.forEach((m,i)=>{if(i===selected||m.on===false)return;m.id=m.id||uid();keep.add(m.id);let el=ghosts.get(m.id);if(!el){el=document.createElement('img');el.className='ghost';el.dataset.off='1';el.onload=()=>{if(el.naturalWidth)el._asp=el.naturalHeight/el.naturalWidth};ghostLayer.appendChild(el);ghosts.set(m.id,el)}el.style.opacity=(m.opacity??65)/100;el.style.filter=visualFilter(m);el.style.zIndex=String(i+1);el.decoding='async';ghostPlace(el,m)});for(const [id,el] of [...ghosts]){if(!keep.has(id)){el.remove();ghosts.delete(id)}}}
 function syncGhosts(){if(!map)return;for(const m of maps){const el=ghosts.get(m.id);if(el&&m.geo)ghostPlace(el,m)}}
 function toggleVis(i){const m=maps[i];if(!m)return;m.on=(m.on===false);if(i===selected){img.style.display=m.on===false?'none':'block';if(m.on===false)liveOff()}renderGhosts();renderList()}
 function setBrush(v){if(v&&selected>=0&&maps[selected]?.locked){status.textContent='এই ম্যাপটি লক করা আছে। কাজ করতে আগে আনলক করুন।';return}brush=v;phase='idle';$('allBrush').classList.toggle('on',v==='all');$('floodBrush').classList.toggle('on',v==='flood');$('brushOff').classList.toggle('on',!v);pe();if(!v&&needSwap){clearTimeout(swapT);commitIdle()}$('cleanStatus').textContent=v==='all'?'এক আঙুল দিয়ে ঘষুন—সাদা, কালো ও সব রঙের অংশ সত্যিকারের স্বচ্ছ হবে; কালো রঙ আঁকা হবে না, নিচের ম্যাপ দেখা যাবে।':v==='flood'?'সাদা/হালকা রঙের ওপর একবার টাচ করুন। মিল থাকা হালকা অংশ মুছবে; কালো লাইন ও ডট এক টাচে সুরক্ষিত থাকবে। কালো অংশ হাতে ব্রাশ দিয়ে মুছতে পারবেন।':'ব্রাশ বন্ধ। Undo দিয়ে শেষ ক্লিনিং ফিরিয়ে আনতে পারবেন।'}$('allBrush').onclick=()=>{setBrush('all');if(selected>=0&&map&&!maps[selected].geo)anchorNow()};$('brushOff').onclick=()=>setBrush('');$('floodBrush').onclick=()=>setBrush('flood');
