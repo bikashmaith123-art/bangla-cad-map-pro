@@ -15,7 +15,7 @@
 <div class="row"><button id="align" class="primary">🎯 দুই পয়েন্টে অ্যালাইন</button><button id="cancelAlign">বাতিল</button><button id="resetView">ছবি রিসেট</button><button id="moveToggle">✋ ছবি সরানো: বন্ধ</button><button id="baseToggle">🛰 Google</button><select id="imgMax" title="ছবির মান"><option value="1200">ছবি: দ্রুত</option><option value="1600" selected>ছবি: মাঝারি</option><option value="2400">ছবি: ভালো</option><option value="3200">ছবি: সেরা</option></select></div>
 <div class="row"><label>স্বচ্ছতা <input id="opacity" type="range" min="5" max="100" value="65"><output id="opVal">৬৫%</output></label><label>উজ্জ্বলতা <input id="brightness" type="range" min="30" max="200" value="100"><output id="brVal">১০০%</output></label></div>
 <div class="row"><button id="whiteBrush">⬜ সাদা অংশ ক্লিয়ার</button><button id="darkBrush">⚫ কালো দাগ ক্লিয়ার</button><button id="floodBrush">🪄 এক টাচে রঙ ক্লিয়ার</button><label>যে রঙ মুছবেন <input id="floodColor" type="color" value="#ffffff"></label><label>সহনশীলতা <input id="floodTol" type="range" min="5" max="100" value="35"></label><button id="brushOff">✋ ব্রাশ বন্ধ</button><button id="undoBtn">↩ আনডু (০)</button><label>কালো মাত্রা <input id="darkSens" type="range" min="20" max="100" value="65"></label><label>ব্রাশ <input id="brushSize" type="range" min="6" max="120" value="28"></label></div>
-<div class="hint" id="cleanStatus">সাদা বা কালো ক্লিয়ার বেছে এক আঙুলে ঘষুন, দুই আঙুলে জুম করুন। ভুল হলে “আনডু” (৪টি কাজ পর্যন্ত)। পরিবর্তন শুধু নির্বাচিত ফাইলেই থাকবে।</div>
+<div class="hint" id="cleanStatus">সাদা বা কালো ক্লিয়ার বেছে এক আঙুলে ঘষুন, দুই আঙুলে জুম করুন। এক টাচে রঙ ক্লিয়ারসহ শেষ ৪টি ক্লিনিং কাজ “আনডু” করে আগের অবস্থায় ফিরতে পারবেন। পরিবর্তন শুধু নির্বাচিত ফাইলেই থাকবে।</div>
 </div><div class="hint">প্রজেক্ট এই ব্রাউজারের IndexedDB-তে সেভ হবে। অন্য ডিভাইসে নিতে “ব্যাকআপ” ডাউনলোড করে রাখুন।</div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script><script>
 (()=>{'use strict';const $=id=>document.getElementById(id),img=$('overlayImg'),file=$('file'),status=$('status'),catcher=$('tapCatcher'),badge=$('badge');
@@ -61,22 +61,64 @@ function syncGhosts(){if(!map)return;for(const m of maps){const el=ghosts.get(m.
 function toggleVis(i){const m=maps[i];if(!m)return;m.on=(m.on===false);if(i===selected){img.style.display=m.on===false?'none':'block';if(m.on===false)liveOff()}renderGhosts();renderList()}
 function setBrush(v){if(v&&selected>=0&&maps[selected]?.locked){status.textContent='এই ম্যাপটি লক করা আছে। কাজ করতে আগে 🔓 আনলক করুন।';return}brush=v;phase='idle';$('whiteBrush').classList.toggle('on',v==='white');$('darkBrush').classList.toggle('on',v==='dark');$('floodBrush').classList.toggle('on',v==='flood');$('brushOff').classList.toggle('on',!v);pe();if(!v&&needSwap){clearTimeout(swapT);commitIdle()}$('cleanStatus').textContent=v==='white'?'এক আঙুলে সাদা অংশ ঘষুন। ব্রাশ বন্ধ থাকলে দুই আঙুলে জুম/ছোট-বড় করুন।':v==='dark'?'এক আঙুলে কালো দাগ ঘষুন। ব্রাশ বন্ধ থাকলে দুই আঙুলে জুম/ছোট-বড় করুন।':v==='flood'?'রঙ বেছে নিন, তারপর সেই রঙের সংযুক্ত অংশে একবার টাচ করুন—পুরো অংশ একসঙ্গে মুছে যাবে।':'ব্রাশ বন্ধ। এখন দুই আঙুলে জুম/ছোট-বড়; এক আঙুলে সরাতে “ছবি সরানো” চালু করুন।'}$('whiteBrush').onclick=()=>{setBrush('white');if(selected>=0&&map&&!maps[selected].geo)anchorNow()};$('darkBrush').onclick=()=>{setBrush('dark');if(selected>=0&&map&&!maps[selected].geo)anchorNow()};$('brushOff').onclick=()=>setBrush('');$('floodBrush').onclick=()=>setBrush('flood');
 function cleanAt(x,y){if(!editCtx||selected<0||!brush)return;const r=img.getBoundingClientRect();if(x<r.left||x>r.right||y<r.top||y>r.bottom)return;const sx=editCanvas.width/r.width,sy=editCanvas.height/r.height,cx=(x-r.left)*sx,cy=(y-r.top)*sy,rad=(+$('brushSize').value)/2*(sx+sy)/2,x0=Math.max(0,Math.floor(cx-rad)),y0=Math.max(0,Math.floor(cy-rad)),x1=Math.min(editCanvas.width,Math.ceil(cx+rad)),y1=Math.min(editCanvas.height,Math.ceil(cy+rad));if(x1<=x0||y1<=y0)return;const d=editCtx.getImageData(x0,y0,x1-x0,y1-y0),a=d.data;let n=0;const dc=70+(+$('darkSens').value)*1.3;if(!curStroke)curStroke={seen:new Set(),idx:[],alpha:[]};for(let yy=0;yy<d.height;yy++)for(let xx=0;xx<d.width;xx++){const dx=x0+xx-cx,dy=y0+yy-cy;if(dx*dx+dy*dy>rad*rad)continue;const k=(yy*d.width+xx)*4,R=a[k],G=a[k+1],B=a[k+2],mx=Math.max(R,G,B),mn=Math.min(R,G),lum=(R+G+B)/3,hit=brush==='white'?(lum>190&&mx-mn<65):(lum<dc&&mx-mn<110);if(hit&&a[k+3]){const gi=(y0+yy)*editCanvas.width+(x0+xx);if(!curStroke.seen.has(gi)){curStroke.seen.add(gi);curStroke.idx.push(gi);curStroke.alpha.push(a[k+3])}a[k+3]=0;n++}}editCtx.putImageData(d,x0,y0);if(n){if(!liveOn)startLive();dirty=true;needSwap=true;editVer++;$('cleanStatus').textContent=n+'টি পিক্সেল স্বচ্ছ করা হয়েছে।'}else $('cleanStatus').textContent='ব্রাশের রঙের সীমায় পিক্সেল মেলেনি; সাইজ বাড়িয়ে চেষ্টা করুন।'}
-function floodAt(x,y){
- if(!editCtx||selected<0||!editCanvas.width)return;
+let floodBusy=false;
+const floodYield=()=>new Promise(resolve=>setTimeout(resolve,0));
+async function floodAt(x,y){
+ if(floodBusy||!editCtx||selected<0||!editCanvas.width)return;
  const r=img.getBoundingClientRect();if(x<r.left||x>r.right||y<r.top||y>r.bottom)return;
- const w=editCanvas.width,h=editCanvas.height,total=w*h,px=Math.max(0,Math.min(w-1,Math.floor((x-r.left)*w/r.width))),py=Math.max(0,Math.min(h-1,Math.floor((y-r.top)*h/r.height)));
- const im=editCtx.getImageData(0,0,w,h),a=im.data,seed=py*w+px,sk=seed*4,hex=$('floodColor').value;
- const target=[parseInt(hex.slice(1,3),16),parseInt(hex.slice(3,5),16),parseInt(hex.slice(5,7),16)],tol=+$('floodTol').value*2.55;
- const matches=i=>{const k=i*4;if(!a[k+3])return false;return Math.max(Math.abs(a[k]-target[0]),Math.abs(a[k+1]-target[1]),Math.abs(a[k+2]-target[2]))<=tol};
- if(!matches(seed)){$('cleanStatus').textContent='টাচ করা পিক্সেলটি নির্বাচিত রঙের সঙ্গে মেলেনি। রঙ বেছে নিয়ে সেই রঙের অংশে টাচ করুন অথবা সহনশীলতা বাড়ান।';return;}
- const before=new Uint8Array(total);for(let z=0;z<total;z++)before[z]=a[z*4+3];const seen=new Uint8Array(total),queue=new Uint32Array(total);let head=0,tail=0,changed=0;queue[tail++]=seed;seen[seed]=1;
- while(head<tail){const i=queue[head++],k=i*4;if(!a[k+3])continue;a[k+3]=0;changed++;const xx=i%w,yy=(i/w)|0;
-  if(xx>0&&!seen[i-1]&&matches(i-1)){seen[i-1]=1;queue[tail++]=i-1}
-  if(xx<w-1&&!seen[i+1]&&matches(i+1)){seen[i+1]=1;queue[tail++]=i+1}
-  if(yy>0&&!seen[i-w]&&matches(i-w)){seen[i-w]=1;queue[tail++]=i-w}
-  if(yy<h-1&&!seen[i+w]&&matches(i+w)){seen[i+w]=1;queue[tail++]=i+w}
- }
- if(changed){pushUndo({t:'full',data:before});editCtx.putImageData(im,0,0);if(!liveOn)startLive();dirty=true;needSwap=true;editVer++;$('cleanStatus').textContent=changed.toLocaleString('bn-BD')+'টি সংযুক্ত পিক্সেল এক টাচে ক্লিয়ার হয়েছে। আনডু করতে পারবেন।';clearTimeout(swapT);swapT=setTimeout(commitIdle,700);}
+ const w=editCanvas.width,h=editCanvas.height,total=w*h;
+ // ফোন/ট্যাবলেটের RAM বাঁচাতে সীমা; আগের সংস্করণে একাধিক পূর্ণ-ছবির অ্যারে ও বিশাল JS stack তৈরি হয়ে UI আটকে যাচ্ছিল।
+ if(total>2000000){$('cleanStatus').textContent='এই ম্যাপটি খুব বড়। হ্যাং এড়াতে এক টাচ ক্লিনারের জন্য ছবিটি ২০ লক্ষ পিক্সেলের নিচে ছোট করুন; অন্য ক্লিনার আগের মতো ব্যবহার করতে পারবেন।';return;}
+ const px=Math.max(0,Math.min(w-1,Math.floor((x-r.left)*w/r.width))),py=Math.max(0,Math.min(h-1,Math.floor((y-r.top)*h/r.height)));
+ let im,before,visited,stack;
+ try{
+  im=editCtx.getImageData(0,0,w,h);
+  before=new Uint8Array(total);
+  const a=im.data;for(let z=0,j=3;z<total;z++,j+=4)before[z]=a[j];
+  visited=new Uint8Array(total);
+  stack=new Int32Array(Math.min(total,65536));
+ }catch(err){$('cleanStatus').textContent='এই ছবির জন্য পর্যাপ্ত মেমরি নেই। ছবিটি ছোট করে আবার চেষ্টা করুন।';return;}
+ const a=im.data,hex=$('floodColor').value;
+ const tr=parseInt(hex.slice(1,3),16),tg=parseInt(hex.slice(3,5),16),tb=parseInt(hex.slice(5,7),16),tol=+$('floodTol').value*2.55;
+ const matches=i=>{const k=i*4;return a[k+3]>0&&Math.abs(a[k]-tr)<=tol&&Math.abs(a[k+1]-tg)<=tol&&Math.abs(a[k+2]-tb)<=tol};
+ const start=py*w+px;
+ if(!matches(start)){$('cleanStatus').textContent='টাচ করা পিক্সেলটি নির্বাচিত রঙের সঙ্গে মেলেনি। রঙ বা সহনশীলতা বদলে চেষ্টা করুন।';return;}
+ floodBusy=true;$('floodBrush').disabled=true;$('cleanStatus').textContent='ক্লিনিং শুরু হচ্ছে…';
+ let top=0,changed=0,work=0,cap=stack.length;
+ const push=i=>{if(top>=cap){const next=Math.min(total,Math.max(cap*2,1024));if(next<=cap)throw new Error('queue-limit');const bigger=new Int32Array(next);bigger.set(stack.subarray(0,top));stack=bigger;cap=next;}stack[top++]=i;};
+ try{
+  visited[start]=1;push(start);
+  while(top){
+   const seed=stack[--top];if(!matches(seed))continue;
+   const sy=(seed/w)|0,row=sy*w,sx=seed-row;
+   let left=sx,right=sx;
+   while(left>0&&matches(row+left-1))left--;
+   while(right<w-1&&matches(row+right+1))right++;
+   for(let xx=left;xx<=right;xx++){const ii=row+xx;if(a[ii*4+3]){a[ii*4+3]=0;changed++;}}
+   for(let ny=sy-1;ny<=sy+1;ny+=2){
+    if(ny<0||ny>=h)continue;
+    const nr=ny*w;let xx=left;
+    while(xx<=right){const ii=nr+xx;
+     if(!visited[ii]&&matches(ii)){
+      visited[ii]=1;push(ii);xx++;
+      while(xx<=right){const jj=nr+xx;if(visited[jj]||!matches(jj))break;visited[jj]=1;xx++;}
+     }else xx++;
+    }
+   }
+   if(++work%300===0){$('cleanStatus').textContent='ক্লিনিং চলছে… '+changed.toLocaleString('bn-BD')+' পিক্সেল পরিষ্কার হচ্ছে।';await floodYield();}
+  }
+  if(changed){
+   // Undo-তে শুধু alpha চ্যানেল রাখা হয়; মূল রঙের ডেটা অক্ষত থাকে।
+   pushUndo({t:'full',data:before});
+   editCtx.putImageData(im,0,0);
+   if(!liveOn)startLive();dirty=true;needSwap=true;editVer++;
+   $('cleanStatus').textContent=changed.toLocaleString('bn-BD')+'টি সংযুক্ত পিক্সেল ক্লিয়ার হয়েছে। ↩ Undo দিয়ে ফিরিয়ে আনতে পারবেন।';
+   clearTimeout(swapT);swapT=setTimeout(commitIdle,900);
+  }else $('cleanStatus').textContent='এই রঙের সংযুক্ত অংশ পাওয়া যায়নি।';
+ }catch(err){
+  // Canvas-এ লেখা দেওয়ার আগে ব্যর্থ হলে আসল ছবি বদলায়নি।
+  $('cleanStatus').textContent='মেমরি সীমার কারণে ক্লিনিং থেমে গেছে। অ্যাপ আটকে যাওয়া এড়াতে ছবিটি ছোট করে আবার চেষ্টা করুন।';
+ }finally{floodBusy=false;$('floodBrush').disabled=selected<0||!!maps[selected]?.locked;}
 }
 const bptrs=new Map();let armed=false,pinch=null,blockDraw=false,downPt=null,needSwap=false;
 function pinchStart(){if(!map)return;const a=[...bptrs.values()],p=a[0],q=a[1];pinch={d:Math.max(1,Math.hypot(q.x-p.x,q.y-p.y)),z:map.getZoom(),ll:map.containerPointToLatLng([(p.x+q.x)/2,(p.y+q.y)/2])}}
