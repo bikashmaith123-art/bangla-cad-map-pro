@@ -697,7 +697,27 @@ function circleRadiusMetres(){const v=Math.max(.001,Number($('circleRadius').val
 function polygonAreaM2(points){if(points.length<3)return 0;const lat0=points.reduce((a,p)=>a+p.lat,0)/points.length,xy=points.map(p=>toLocal(p,lat0));let sum=0;for(let i=0;i<xy.length;i++){const a=xy[i],b=xy[(i+1)%xy.length];sum+=a.x*b.y-b.x*a.y}return Math.abs(sum)/2}
 function areaText(m2){const u=$('areaUnit').value,vals={sqm:[m2,'m²'],sqft:[m2*10.7639104167,'ft²'],acre:[m2/4046.8564224,'acre'],hectare:[m2/10000,'ha']},v=vals[u];return `${v[0].toLocaleString('en-IN',{maximumFractionDigits:4})} ${v[1]}`}
 function refreshArea(){const box=$('areaResult');if(!box)return;if(drawPoints.length<3){box.textContent='এরিয়া হিসাবের জন্য অন্তত ৩টি পয়েন্ট দিন।';return}const a=polygonAreaM2(drawPoints);box.textContent=`সীমানার ক্ষেত্রফল: ${areaText(a)} · ${a.toFixed(3)} m²`;}
-function drawMarker(p,index){const n=index+1,icon=L.divIcon({className:'',html:`<div style="background:#0b65c2;color:white;border:2px solid white;border-radius:50%;width:27px;height:27px;line-height:23px;text-align:center;font-weight:700;font-size:12px;box-shadow:0 1px 5px #0009">${n}</div>`,iconSize:[27,27],iconAnchor:[13,13]});const mk=L.marker([p.lat,p.lng],{icon,draggable:true}).addTo(drawGroup());mk.on('dragend',()=>{const ll=mk.getLatLng();drawPoints[n-1].lat=ll.lat;drawPoints[n-1].lng=ll.lng;renderDrawing()});drawLayers.push(mk);mk.on('click',()=>pointTap(n-1))}
+
+/* ---- পয়েন্ট শিফট/ড্র্যাগ করার সময় লাইভ দূরত্ব ---- */
+let _dragLayer=null;
+function clearDragInfo(){if(_dragLayer){_dragLayer.clearLayers()}}
+function liveDragInfo(idx,ll,orig){
+ if(!_dragLayer)_dragLayer=L.layerGroup().addTo(map);_dragLayer.clearLayers();
+ const n=drawPoints.length,closed=!!drawAreaClosed&&n>=3,P=[];
+ if(idx>0)P.push(idx-1);else if(closed)P.push(n-1);
+ if(idx<n-1)P.push(idx+1);else if(closed)P.push(0);
+ const lab=(pos,html,bg,dy)=>L.marker(pos,{interactive:false,keyboard:false,icon:L.divIcon({className:'',iconSize:[0,0],html:`<div style="position:absolute;transform:translate(-50%,${dy}px);white-space:nowrap;background:${bg};color:#fff;border:1.5px solid #fff;border-radius:8px;padding:2px 7px;font:700 13px system-ui,sans-serif;box-shadow:0 1px 5px #0009;pointer-events:none">${html}</div>`})}).addTo(_dragLayer);
+ [...new Set(P)].forEach(j=>{const q=drawPoints[j];
+  L.polyline([[q.lat,q.lng],[ll.lat,ll.lng]],{color:'#e45b20',weight:3,interactive:false}).addTo(_dragLayer);
+  const oldD=hav(q,orig),newD=hav(q,ll),diff=newD-oldD,sign=diff>=0?'+':'−',mid={lat:(q.lat+ll.lat)/2,lng:(q.lng+ll.lng)/2};
+  lab(mid,`${distVal(newD)} <span style="font-weight:500;opacity:.9">(${sign}${distVal(Math.abs(diff))})</span>`,'#e45b20',-4)});
+ const moved=hav(orig,ll);
+ L.polyline([[orig.lat,orig.lng],[ll.lat,ll.lng]],{color:'#7e22ce',weight:2,dashArray:'4 4',interactive:false}).addTo(_dragLayer);
+ L.circleMarker([orig.lat,orig.lng],{radius:4,color:'#7e22ce',fillOpacity:1,interactive:false}).addTo(_dragLayer);
+ lab(ll,`${idx+1} নং সরেছে: ${distVal(moved)}`,'#7e22ce',-44);
+ const st=$('drawStatus');if(st)st.textContent=`${idx+1} নম্বর পয়েন্ট ${distVal(moved)} সরেছে — ছেড়ে দিলে এখানেই স্থির হবে।`;
+}
+function drawMarker(p,index){const n=index+1,icon=L.divIcon({className:'',html:`<div style="background:#0b65c2;color:white;border:2px solid white;border-radius:50%;width:27px;height:27px;line-height:23px;text-align:center;font-weight:700;font-size:12px;box-shadow:0 1px 5px #0009">${n}</div>`,iconSize:[27,27],iconAnchor:[13,13]});const mk=L.marker([p.lat,p.lng],{icon,draggable:true}).addTo(drawGroup());let orig=null;mk.on('dragstart',()=>{orig={lat:p.lat,lng:p.lng}});mk.on('drag',()=>{if(!orig)orig={lat:p.lat,lng:p.lng};liveDragInfo(n-1,mk.getLatLng(),orig)});mk.on('dragend',()=>{const ll=mk.getLatLng();clearDragInfo();drawPoints[n-1].lat=ll.lat;drawPoints[n-1].lng=ll.lng;renderDrawing();orig=null});drawLayers.push(mk);mk.on('click',()=>pointTap(n-1))}
 function renderDrawing(){if(!map)return;drawGroup().clearLayers();drawLayers=[];const curOn=!plots[curPlot]||plots[curPlot].visible!==false,cur=plots[curPlot]||{},DP=curOn?drawPoints:[],closed=!!drawAreaClosed&&drawPoints.length>=3;DP.forEach((p,i)=>{drawMarker(p,i);if(cur.showLines!==false&&i>0)L.polyline([[drawPoints[i-1].lat,drawPoints[i-1].lng],[p.lat,p.lng]],{color:'#00a6ff',weight:3,dashArray:'7 5'}).addTo(drawGroup())});DP.forEach((p,i)=>{if(p.radius)L.circle([p.lat,p.lng],{radius:p.radius,color:'#e45b20',weight:2,fillOpacity:.05}).addTo(drawGroup())});if(curOn&&closed)L.polygon(drawPoints.map(p=>[p.lat,p.lng]),{color:cur.showLines===false?'transparent':'#16a34a',weight:cur.showLines===false?0:3,fillColor:'#22c55e',fillOpacity:.16}).addTo(drawGroup());if(curOn&&(cur.showDistances||cur.showArea))drawPlotMeasurements(cur,'#111');drawOtherPlots();$('drawList').innerHTML=drawPoints.map((p,i)=>{const d=i?hav(drawPoints[i-1],p):0;return `<div class="drow"><span><b>${i+1}. ${esc(p.name||'Point '+(i+1))}</b><small>${coordText(p)}</small>${i?`<small>আগের পয়েন্ট থেকে: ${distVal(d)}</small>`:''}</span><button data-dsel="${i}">${drawSelected.includes(i)?'✓':'বাছুন'}</button><button data-ddel="${i}">✕</button></div>`}).join('');$('drawList').querySelectorAll('[data-dsel]').forEach(b=>b.onclick=()=>{const i=+b.dataset.dsel;drawSelected=drawSelected.includes(i)?drawSelected.filter(x=>x!==i):[...drawSelected,i].slice(-2);renderDrawing()});$('drawList').querySelectorAll('[data-ddel]').forEach(b=>b.onclick=()=>{drawPoints.splice(+b.dataset.ddel,1);drawSelected=[];renderDrawing()});$('drawStatus').textContent=`মোট ${drawPoints.length}টি পয়েন্ট · ${Math.max(0,drawPoints.length-1)}টি লাইন সেগমেন্ট`;refreshArea();renderPlotBar();clearTimeout(window._pp);window._pp=setTimeout(persistPlots,1500)}
 function addDrawPoint(latlng,name){if(plots[curPlot])plots[curPlot].visible=true;drawPoints.push({lat:latlng.lat,lng:latlng.lng,name:name||`Point ${drawPoints.length+1}`});renderDrawing()}
 function circleIntersections(a,b,r){const lat0=(a.lat+b.lat)/2,A=toLocal(a,lat0),B=toLocal(b,lat0),dx=B.x-A.x,dy=B.y-A.y,d=Math.hypot(dx,dy);if(d===0||d>2*r||d<1e-6)return[];const x=d/2,h=Math.sqrt(Math.max(0,r*r-x*x)),mx=(A.x+B.x)/2,my=(A.y+B.y)/2,ux=-dy/d,uy=dx/d;return[fromLocal(mx+ux*h,my+uy*h,lat0),fromLocal(mx-ux*h,my-uy*h,lat0)]}
@@ -706,7 +726,44 @@ function nearPointIdx(ll,px){const c=map.latLngToContainerPoint(ll);let best=-1,
 function pointTap(k){const p=drawPoints[k];if(!p)return;if(drawMode==='circle'){const r=circleRadiusMetres();p.radius=r;drawMode='idle';renderDrawing();$('drawStatus').textContent=`${k+1} নম্বর পয়েন্টেই বৃত্ত বসেছে (ব্যাসার্ধ ${r.toFixed(3)} মিটার); নতুন পয়েন্ট নম্বর যোগ হয়নি।`}else if(drawMode==='delcircle'){if(p.radius){delete p.radius;renderDrawing();$('drawStatus').textContent=`${k+1} নম্বর পয়েন্টের বৃত্ত মোছা হয়েছে। আরও মুছতে বৃত্তে টাচ করুন, শেষ হলে “বন্ধ” চাপুন।`}else $('drawStatus').textContent=`${k+1} নম্বর পয়েন্টে কোনো বৃত্ত নেই।`}}
 function delCircleAt(ll){const mpp=40075016.686*Math.cos(ll.lat*Math.PI/180)/(256*Math.pow(2,map.getZoom())),tol=26*mpp;let best=-1,bs=1e18;drawPoints.forEach((p,i)=>{if(!p.radius)return;const ring=Math.abs(map.distance([p.lat,p.lng],ll)-p.radius);if(ring<=tol&&ring<bs){bs=ring;best=i}});if(best<0){bs=1e18;drawPoints.forEach((p,i)=>{if(!p.radius)return;const d=map.distance([p.lat,p.lng],ll);if(d<=p.radius&&d<bs){bs=d;best=i}})}if(best<0){$('drawStatus').textContent='এখানে কোনো বৃত্ত পাওয়া যায়নি। বৃত্তের দাগে বা ভেতরে টাচ করুন।';return}pointTap(best)}
 $('circleDel').onclick=()=>{drawMode='delcircle';$('drawStatus').textContent='যে বৃত্ত মুছতে চান তার দাগে বা ভেতরে টাচ করুন (পয়েন্টে টাচ করলেও হবে)। শেষ হলে “বন্ধ” চাপুন।'};
-map.on('click',e=>{if(!$('drawPanel')||$('drawPanel').style.display==='none'||drawMode==='idle')return;if(drawMode==='point'||drawMode==='line'){addDrawPoint(e.latlng);if(drawMode==='point')drawMode='idle';}else if(drawMode==='circle'){const k=nearPointIdx(e.latlng,34);if(k>=0)pointTap(k);else $('drawStatus').textContent='বৃত্ত বসাতে কোনো পয়েন্টের ওপর টাচ করুন; নতুন পয়েন্ট যোগ হয়নি।'}else if(drawMode==='delcircle'){delCircleAt(e.latlng)}});
+map.on('click',e=>{if(Date.now()<(window._noClickUntil||0))return;if(!$('drawPanel')||$('drawPanel').style.display==='none'||drawMode==='idle')return;if(drawMode==='point'||drawMode==='line'){addDrawPoint(e.latlng);if(drawMode==='point')drawMode='idle';}else if(drawMode==='circle'){const k=nearPointIdx(e.latlng,34);if(k>=0)pointTap(k);else $('drawStatus').textContent='বৃত্ত বসাতে কোনো পয়েন্টের ওপর টাচ করুন; নতুন পয়েন্ট যোগ হয়নি।'}else if(drawMode==='delcircle'){delCircleAt(e.latlng)}});
+
+/* ---- চেপে ধরে টেনে নতুন পয়েন্ট বসানো: আগের পয়েন্ট থেকে লাইভ দূরত্ব, ছাড়লে সেখানেই পয়েন্ট ---- */
+(function(){
+ const el=map.getContainer();let timer=null,start=null,active=false,pid=null,layer=null,pos=null,dragWas=true;
+ const okMode=()=>$('drawPanel')&&$('drawPanel').style.display!=='none'&&(drawMode==='point'||drawMode==='line');
+ const toLL=e=>map.mouseEventToLatLng({clientX:e.clientX,clientY:e.clientY});
+ function show(ll){
+  pos=ll;if(!layer)layer=L.layerGroup().addTo(map);layer.clearLayers();
+  const n=drawPoints.length,prev=n?drawPoints[n-1]:null;
+  L.circleMarker([ll.lat,ll.lng],{radius:7,color:'#fff',weight:2,fillColor:'#e45b20',fillOpacity:1,interactive:false}).addTo(layer);
+  let txt=`${n+1} নং পয়েন্ট`;
+  if(prev){const d=hav(prev,ll);txt=`${distVal(d)}`;
+   L.polyline([[prev.lat,prev.lng],[ll.lat,ll.lng]],{color:'#e45b20',weight:3,interactive:false}).addTo(layer);
+   const st=$('drawStatus');if(st)st.textContent=`${n} নং পয়েন্ট থেকে ${distVal(d)} — ছেড়ে দিলে ${n+1} নম্বর পয়েন্ট এখানেই বসবে।`}
+  L.marker([ll.lat,ll.lng],{interactive:false,keyboard:false,icon:L.divIcon({className:'',iconSize:[0,0],html:`<div style="position:absolute;transform:translate(-50%,-62px);white-space:nowrap;background:#e45b20;color:#fff;border:2px solid #fff;border-radius:10px;padding:4px 10px;font:700 17px system-ui,sans-serif;box-shadow:0 2px 8px #000a;pointer-events:none">${txt}</div>`})}).addTo(layer);
+ }
+ function finish(commit,e){
+  clearTimeout(timer);const was=active;active=false;start=null;pid=null;
+  if(layer)layer.clearLayers();
+  if(was){if(dragWas)map.dragging.enable();window._noClickUntil=Date.now()+500;
+   if(commit){const ll=e?toLL(e):pos;if(ll){addDrawPoint(ll);if(drawMode==='point')drawMode='idle'}}}
+ }
+ el.addEventListener('pointerdown',e=>{
+  if(!okMode()||e.isPrimary===false||(e.button&&e.button!==0))return;
+  if(e.target.closest&&e.target.closest('.leaflet-marker-icon,.leaflet-control,.leaflet-popup'))return;
+  start={x:e.clientX,y:e.clientY};pid=e.pointerId;clearTimeout(timer);
+  timer=setTimeout(()=>{if(!start)return;active=true;dragWas=map.dragging.enabled();map.dragging.disable();show(toLL({clientX:start.x,clientY:start.y}));if(navigator.vibrate)try{navigator.vibrate(25)}catch(_){}},300);
+ });
+ document.addEventListener('pointermove',e=>{
+  if(e.pointerId!==pid)return;
+  if(!active){if(start&&Math.hypot(e.clientX-start.x,e.clientY-start.y)>10){clearTimeout(timer);start=null}return}
+  e.preventDefault();show(toLL(e));
+ },{passive:false});
+ document.addEventListener('pointerup',e=>{if(e.pointerId===pid)finish(true,e)});
+ document.addEventListener('pointercancel',e=>{if(e.pointerId===pid)finish(false)});
+ el.addEventListener('contextmenu',e=>{if(okMode())e.preventDefault()});
+})();
 $('openDrawing').onclick=()=>{$('drawPanel').style.display=$('drawPanel').style.display==='block'?'none':'block';if($('drawPanel').style.display==='block')renderDrawing()};$('drawClose').onclick=()=>{$('drawPanel').style.display='none';drawMode='idle'};$('drawMin').onclick=()=>{const p=$('drawPanel');p.classList.toggle('collapsed');$('drawMin').textContent=p.classList.contains('collapsed')?'▣ বড়':'▁ ছোট';};
 $('drawPoint').onclick=()=>{drawMode='point';$('drawStatus').textContent='ম্যাপে যেখানে পয়েন্ট চান সেখানে একবার টাচ করুন।'};
 $('drawLine').onclick=()=>{drawMode='line';$('drawStatus').textContent='ম্যাপে পরপর টাচ করে লাইন/পলিলাইন তৈরি করুন। শেষ হলে “বন্ধ” চাপুন।'};
