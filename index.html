@@ -2,24 +2,6 @@
 <link rel="preconnect" href="https://mt0.google.com"><link rel="preconnect" href="https://mt1.google.com"><link rel="preconnect" href="https://mt2.google.com"><link rel="preconnect" href="https://mt3.google.com"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css"><style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:system-ui,'Noto Sans Bengali',sans-serif;background:#e9eef4}#map{position:absolute;inset:0;z-index:0}#map.leaflet-container{font-family:inherit}.leaflet-top.leaflet-right{top:62px}#liveCv{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-width:82vw;max-height:65vh;object-fit:contain;pointer-events:none;display:none;user-select:none}.ghost{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-width:82vw;max-height:65vh;object-fit:contain;opacity:.65;pointer-events:none;user-select:none;-webkit-user-drag:none}.mk{width:26px;height:26px;border-radius:50%;background:#2e9e45;border:3px solid #fff;box-shadow:0 1px 6px #0008;color:#fff;font:700 13px/20px sans-serif;text-align:center}#badge{max-width:92vw;text-align:center;white-space:normal}#map iframe{width:100%;height:100%;border:0}button{border:1px solid #b8c8d8;background:#fff;border-radius:9px;padding:9px 12px;font-size:14px;color:#172b40}button.primary{background:#1769aa;color:white;border-color:#1769aa}button.on{background:#1769aa;color:#fff}#upload{position:absolute;z-index:20;top:10px;left:50%;transform:translateX(-50%);font-size:16px;font-weight:700;padding:12px 18px;white-space:nowrap;box-shadow:0 3px 12px #0005}#file,#projectFile{display:none}#imageLayer{position:absolute;inset:0;z-index:8;pointer-events:none;overflow:hidden}#ghostLayer{position:absolute;inset:0;z-index:1;pointer-events:none}#overlayImg{z-index:2}#overlayImg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-width:82vw;max-height:65vh;object-fit:contain;opacity:.65;touch-action:none;pointer-events:auto;user-select:none;-webkit-user-drag:none;filter:brightness(1)}#tapCatcher{position:absolute;inset:0;z-index:12;display:none;background:transparent;touch-action:pan-x pan-y}#panel{position:absolute;z-index:25;left:8px;right:8px;bottom:8px;max-height:52vh;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;background:#fffffff2;border:1px solid #b8c8d8;border-radius:14px;padding:10px;box-shadow:0 3px 14px #0004;transition:max-height .18s ease,padding .18s ease}#panelHead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:-2px 0 7px}#panelHead b{font-size:13px;color:#26384b}#panelToggle{padding:7px 12px;font-weight:700}#panel.collapsed{max-height:48px;overflow:hidden;padding:5px 8px}#panel.collapsed>:not(#panelHead){display:none}#panel.collapsed #panelHead{margin:0}#panel.collapsed #panelToggle{margin-left:auto}#status{font-size:13px;font-weight:600;color:#26384b;margin:0 0 8px;line-height:1.4}.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:5px 0}label{font-size:13px;color:#43566a;display:flex;align-items:center;gap:5px}input[type=range]{width:100px}input[type=text],select{border:1px solid #b8c8d8;border-radius:8px;padding:8px;max-width:100%}.hint{font-size:12px;color:#536579}#mapList{max-height:30vh;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;border-top:1px solid #d5e0ea;padding-top:4px;margin-top:5px}.maprow{display:flex;gap:7px;align-items:center;flex-wrap:wrap;padding:7px;border:1px solid #d4dce5;border-radius:9px;margin:5px 0}.maprow.active{border:2px solid #1769aa;background:#edf6ff}.maprow span{flex:1;min-width:100px;font-size:13px}.pin{position:absolute;width:18px;height:18px;border:3px solid white;border-radius:50%;background:#e53935;box-shadow:0 1px 6px #0009;transform:translate(-50%,-50%);z-index:15;pointer-events:none}#badge{position:absolute;z-index:24;top:60px;left:50%;transform:translateX(-50%);background:#132d48ed;color:white;border-radius:9px;padding:7px 10px;font-size:12px;display:none;white-space:nowrap}#alignBtns{position:absolute;z-index:26;bottom:28px;left:50%;transform:translateX(-50%);display:none;gap:8px}#alignBtns button{box-shadow:0 2px 8px #0005}.pin.m{background:#2e9e45}#badge{font-size:13px!important}@media(max-width:600px){#panel{max-height:52vh}#mapList{max-height:30vh}#upload{top:7px;font-size:14px;padding:10px 13px}}
 #topBar{position:absolute;z-index:20;top:8px;left:6px;right:6px;display:flex;gap:6px;justify-content:center;pointer-events:none}#topBar button{pointer-events:auto;box-shadow:0 3px 12px #0005;font-weight:700;white-space:nowrap;font-size:13px;padding:10px 9px}#topBar #upload{position:static;transform:none;top:auto;left:auto;font-size:13px;padding:10px 9px}#filesPanel{position:absolute;z-index:40;left:8px;right:8px;top:8px;bottom:8px;display:none;flex-direction:column;overflow-y:auto;overscroll-behavior:contain;background:#fffffff7;border:1px solid #b8c8d8;border-radius:14px;padding:10px;box-shadow:0 3px 14px #0006}#filesHead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;position:sticky;top:-10px;background:#fffffff7;padding:6px 0;z-index:1}#filesHead b{font-size:15px;color:#26384b}#filesPanel #mapList{max-height:none;overflow:visible}#alignBoard{position:absolute;z-index:26;left:8px;right:8px;bottom:8px;display:none;background:#fffffff2;border:1px solid #b8c8d8;border-radius:14px;padding:10px;box-shadow:0 3px 14px #0004}.abHead{display:flex;justify-content:space-between;align-items:center;gap:8px}.abHead b{font-size:14px;color:#26384b}#alignSteps{display:flex;gap:6px;margin:8px 0}#alignSteps i{flex:1;font-style:normal;font-size:12px;text-align:center;padding:6px 2px;border-radius:8px;border:1px solid #b8c8d8;color:#43566a;background:#f2f6fa}#alignSteps i.cur{background:#1769aa;color:#fff;border-color:#1769aa}#alignSteps i.done{background:#2e9e45;color:#fff;border-color:#2e9e45}#alignBoard #badge{position:static;transform:none;white-space:normal;max-width:none;margin:6px 0}#alignBoard #alignBtns{position:static;transform:none;flex-wrap:wrap}#cleanBar{position:absolute;z-index:27;left:8px;right:8px;bottom:8px;max-height:46vh;overflow-y:auto;overscroll-behavior:contain;display:none;background:#fffffff2;border:1px solid #b8c8d8;border-radius:14px;padding:8px;box-shadow:0 3px 14px #0004}#cleanBar.top{bottom:auto;top:58px}.cbHead{display:flex;justify-content:space-between;align-items:center;gap:6px}.cbHead b{font-size:14px;color:#26384b}.cbHead span{display:flex;gap:6px}.cbHead button{padding:7px 9px;font-size:13px}#panel,#filesPanel,#alignBoard,#cleanBar{right:auto;width:min(330px,calc(100vw - 16px));padding:7px 8px;border-radius:12px}#panel{left:8px;bottom:8px;max-height:56vh}#panel.collapsed{width:auto;max-width:calc(100vw - 16px)}#filesPanel{left:8px;top:56px;bottom:auto;height:auto;max-height:calc(100vh - 64px)}#alignBoard{left:8px;bottom:8px;width:min(300px,calc(100vw - 16px))}#cleanBar{left:8px;bottom:8px;max-height:50vh}#cleanBar.top{top:58px;bottom:auto}#panel button,#filesPanel button,#alignBoard button,#cleanBar button{padding:6px 8px;font-size:12.5px;border-radius:8px}#panel #status,#filesPanel #status{font-size:12px;margin:0 0 6px}#panel .row,#filesPanel .row,#cleanBar .row{gap:5px;margin:4px 0}#panel label,#filesPanel label,#cleanBar label{font-size:12px;gap:4px}#panel input[type=range],#cleanBar input[type=range]{width:78px}#panel .hint,#filesPanel .hint,#cleanBar .hint{font-size:11px}#filesPanel .maprow{padding:5px;gap:5px;margin:4px 0}#filesPanel .maprow span{font-size:12px;min-width:90px}#alignSteps{gap:4px;margin:6px 0}#alignSteps i{font-size:11px;padding:5px 1px}#alignBoard #badge{font-size:12px!important;padding:6px 8px}#alignBoard .abHead .hint{display:none}.dragH{cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}.dragH:active{cursor:grabbing}.dragH b{flex:1;white-space:nowrap}.dragH b .grip{display:inline-block;width:10px;height:15px;margin-right:6px;vertical-align:middle;background:radial-gradient(circle,#7a8da1 1.3px,transparent 1.7px) 0 0/5px 5px}#cleanBar.min>:not(.cbHead){display:none}#cleanBar.min{width:auto;max-width:calc(100vw - 16px)}#filesPanel #mapList{max-height:210px;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}#filesPanel .maprow{flex-wrap:nowrap;padding:4px 5px;gap:4px;margin:3px 0}#filesPanel .maprow span{min-width:0;flex:1}#filesPanel .maprow span b,#filesPanel .maprow span small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#filesPanel .maprow button{padding:5px 7px;flex:none}#statusSlot{max-height:40px;overflow-y:auto}#filesPanel .row:has(#toggleMapList){display:none}#drawPanel{position:absolute;z-index:45;right:8px;top:58px;width:min(360px,calc(100vw - 16px));max-height:72vh;overflow:auto;display:none;background:#fffffff5;border:1px solid #9db2c7;border-radius:13px;padding:9px;box-shadow:0 3px 15px #0006}#drawPanel .row{margin:5px 0;gap:5px}#drawPanel input,#drawPanel select{min-width:0;padding:7px;font-size:13px}#drawPanel button{padding:7px 9px;font-size:12px}#drawList{max-height:150px;overflow:auto;border-top:1px solid #d5e0ea;margin-top:6px;padding-top:5px}.drow{font-size:12px;padding:4px;border-bottom:1px solid #e4eaf0;display:flex;gap:5px;align-items:center}.drow span{flex:1;min-width:0}.drow small{display:block;color:#536579;overflow-wrap:anywhere}#drawStatus{font-size:12px;color:#29445e;margin:4px 0}@media(max-width:600px){#drawPanel{top:54px;right:6px;width:min(340px,calc(100vw - 12px));max-height:70vh}}
-
-#drawPanel{left:8px;right:auto;top:58px;width:min(360px,calc(100vw - 16px));max-height:72vh;touch-action:pan-y}
-#drawHead{position:sticky;top:-9px;z-index:3;background:#fffffff5;padding:5px 0;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
-#drawHead:active{cursor:grabbing}
-#drawHead b{flex:1;min-width:0}
-#drawHead span{flex:none}
-#drawPanel.minimized{width:auto!important;max-width:calc(100vw - 16px)!important;max-height:none!important;overflow:hidden!important;padding:5px 8px!important}
-#drawPanel.minimized>:not(#drawHead){display:none!important}
-#drawPanel.minimized #drawHead{margin:0}
-#drawPanel.minimized #drawMin{font-size:12px}
-@media(max-width:600px){#drawPanel{width:min(340px,calc(100vw - 12px));max-height:70vh}}
-
-/* Touch precision pointer: crosshair is the exact placement point, lifted above the finger */
-
-/* Measurement labels drawn directly over survey lines and area */
-.leaflet-tooltip.measure-label{background:rgba(255,255,255,.96);border:1.5px solid #0759a5;border-radius:7px;color:#08345b;font-weight:800;font-size:13px;padding:4px 7px;box-shadow:0 1px 5px #0006;white-space:nowrap}
-.leaflet-tooltip.measure-label:before{display:none}
-.leaflet-tooltip.area-measure-label{background:rgba(226,255,230,.97);border:2px solid #16803b;color:#075b26;font-size:14px;padding:6px 9px}
 </style></head><body>
 <div id="map"></div>
 <input id="file" type="file" accept="image/jpeg,image/png,image/webp" multiple><input id="projectFile" type="file" accept=".kml,.kmz,.zip,application/json,.json,application/vnd.google-earth.kml+xml,application/vnd.google-earth.kmz">
@@ -31,16 +13,8 @@
 <div id="lookHome"><div id="lookBox"><div class="row"><label>স্বচ্ছতা <input id="opacity" type="range" min="0" max="100" value="65"><output id="opVal">৬৫%</output></label><label>উজ্জ্বলতা <input id="brightness" type="range" min="30" max="200" value="100"><output id="brVal">১০০%</output></label></div><div class="row"><label>ক্লিয়ারিটি/কনট্রাস্ট <input id="contrast" type="range" min="50" max="200" value="100"><output id="ctVal">১০০%</output></label><label>রঙের ঘনত্ব <input id="saturation" type="range" min="0" max="200" value="100"><output id="satVal">১০০%</output></label><button id="resetImageLook">↺ ছবি স্বাভাবিক</button></div></div></div>
 </div></div>
 <div id="filesPanel"><div id="filesHead"><b>📁 প্রজেক্ট ও ফাইল</b><button id="closeFiles" type="button">✕ বন্ধ</button></div><div id="statusSlot"></div>
-<div class="row"><input id="projectName" type="text" placeholder="প্রজেক্টের নাম" style="flex:1;min-width:130px"><label style="display:flex;align-items:center;gap:4px">প্রজেক্ট নং <input id="projectNumber" type="number" min="1" step="1" placeholder="001" style="width:76px"></label><button id="nextProjectNumber" type="button">পরের নং</button></div><div class="row"><button id="newProject">＋ নতুন প্রজেক্ট</button><button id="saveProject" class="primary">💾 প্রজেক্ট সেভ</button></div>
-<div id="activeProjectBadge" style="padding:6px 9px;background:#e8f3ff;border:1px solid #9fc8ee;border-radius:8px;font-weight:700;font-size:13px">বর্তমান প্রজেক্ট: নতুন কাজ শুরু হয়নি</div><div class="row"><select id="projectSelect" style="flex:1;min-width:140px"><option value="">সেভ করা প্রজেক্ট বাছুন</option></select><button id="openProject">📂 খুলুন</button><button id="exportKml">⬇ KML সেভ</button><button id="exportProject">⬇ KMZ সেভ (ছবিসহ)</button><button id="importProject">⬆ KML/KMZ খুলুন</button></div>
-<div class="row" style="border:1px solid #b8c8d8;border-radius:9px;padding:7px"><label>ব্যাকআপ প্রজেক্ট নং <input id="backupProjectNumber" type="number" min="1" step="1" placeholder="যেমন 005" style="width:90px"></label><button id="downloadProjectBackup" class="primary" type="button">📦 শুধু এই প্রজেক্টের ব্যাকআপ ডাউনলোড</button></div><div class="hint">এখানে যে প্রজেক্ট নম্বর দেবেন, শুধু সেই প্রজেক্টের ম্যাপ, ড্রয়িং, মাপ ও Excel ফাইলসহ ব্যাকআপ নামবে। অন্য প্রজেক্ট যুক্ত হবে না।</div>
-<div class="row" style="border:1px solid #b8c8d8;border-radius:9px;padding:7px;display:block">
- <div style="font-weight:700;margin-bottom:6px">☑ একসঙ্গে একাধিক প্রজেক্ট নির্বাচন</div>
- <div class="row"><button id="refreshBackupSelection" type="button">তালিকা রিফ্রেশ</button><button id="selectAllBackup" type="button">সব সিলেক্ট</button><button id="clearBackupSelection" type="button">সিলেকশন বাতিল</button></div>
- <div id="backupProjectChoices" style="max-height:150px;overflow:auto;border:1px solid #d5e0ea;border-radius:7px;padding:5px;font-size:13px">প্রজেক্ট তালিকা লোড হচ্ছে…</div>
- <div class="row"><button id="downloadSelectedBackup" class="primary" type="button">📦 নির্বাচিত প্রজেক্টগুলোর একসঙ্গে ব্যাকআপ</button><button id="downloadSelectedExcel" class="primary" type="button">📊 নির্বাচিত প্রজেক্টগুলোর এক Excel</button></div>
- <div class="hint">নির্বাচিত সব প্রজেক্ট একটি ব্যাকআপ ফাইলে একত্রে থাকবে। Excel-এ প্রতিটি প্রজেক্টের জন্য আলাদা আলাদা কোঅর্ডিনেট ও মাপের শিট তৈরি হবে।</div>
-</div>
+<div class="row"><input id="projectName" type="text" placeholder="প্রজেক্টের নাম" style="flex:1;min-width:130px"><button id="newProject">＋ নতুন প্রজেক্ট</button><button id="saveProject" class="primary">💾 প্রজেক্ট সেভ</button></div>
+<div class="row"><select id="projectSelect" style="flex:1;min-width:140px"><option value="">সেভ করা প্রজেক্ট বাছুন</option></select><button id="openProject">📂 খুলুন</button><button id="exportKml">⬇ KML সেভ</button><button id="exportProject">⬇ KMZ সেভ (ছবিসহ)</button><button id="importProject">⬆ KML/KMZ খুলুন</button></div>
 <div class="row"><button id="addMaps" class="primary">📤 একসঙ্গে অনেকগুলো ম্যাপ যোগ</button><span class="hint" id="count">ম্যাপ: ০</span></div>
 <div class="row" style="justify-content:space-between"><b>🗺️ ম্যাপের নামের তালিকা</b><button id="toggleMapList" type="button" style="display:none">☰ তালিকা দেখুন</button></div><div id="mapList" style="display:block"></div>
 <details style="margin-top:4px"><summary class="hint" style="cursor:pointer">ℹ️ KML/KMZ সম্পর্কে</summary><div class="hint">KML সেভ করলে স্থানাঙ্ক ও ছবির লিংকসহ KML এবং ছবিগুলো আলাদা ফাইল হিসেবে নামবে—সবগুলো একই ফোল্ডারে রাখুন। KMZ সেভ করলে KML ও ছবিগুলো এক ফাইলের ভিতরে থাকবে। আমদানি করা ম্যাপের স্বচ্ছতা, উজ্জ্বলতা, কনট্রাস্ট ও রঙের ঘনত্ব আলাদাভাবে বদলাতে পারবেন।</div></details></div>
@@ -48,59 +22,24 @@
 <div class="row"><button id="allBrush">🖌️ সব রঙ ব্রাশ দিয়ে ক্লিয়ার</button><button id="floodBrush">🪄 এক টাচে একই রঙের সব অংশ ক্লিয়ার</button><label>রঙের মিল/সহনশীলতা <input id="floodTol" type="range" min="1" max="100" value="18"></label><button id="brushOff">✋ ব্রাশ বন্ধ</button><button id="undoBtn">↩ আনডু (০)</button><label>ব্রাশের সাইজ <input id="brushSize" type="range" min="6" max="120" value="28"></label></div>
 <div id="cleanLookSlot"></div>
 <div class="hint" id="cleanStatus">ব্রাশ দিয়ে ঘষে মুছুন অথবা এক টাচে নির্বাচিত রঙের সব মিল থাকা অংশ ক্লিয়ার করুন। দুই ধরনের কাজই Undo করা যাবে; সর্বশেষ ১০টি ক্লিনিং/সম্পাদনা ধাপ পর্যন্ত ফিরিয়ে আনতে পারবেন।</div></div>
-<div id="drawPanel"><div id="drawHead" class="row" style="justify-content:space-between"><b>📐 ড্রয়িং প্যানেল — পয়েন্ট ও মাপ</b><span style="display:flex;gap:5px"><button id="drawMin" type="button" title="ছোট করুন">▁ ছোট</button><button id="drawClose" type="button" title="বন্ধ করুন">✕</button></span></div>
+<div id="drawPanel"><div class="row" style="justify-content:space-between"><b>📐 ড্রয়িং প্যানেল — পয়েন্ট ও মাপ</b><button id="drawClose">✕</button></div>
+<div class="row"><select id="plotSelect" style="flex:1;min-width:140px"></select><button id="plotNew" class="primary">＋ নতুন প্লট</button><button id="plotRename">✏ নাম</button><button id="plotDel">🗑 প্লট</button></div>
 <div class="row"><button id="drawPoint" class="primary">📍 ম্যাপে পয়েন্ট দিন</button><button id="drawLine">〰 লাইন আঁকুন</button><button id="drawStop">✋ বন্ধ</button></div>
 <div class="row"><input id="manualLat" type="number" step="any" placeholder="Latitude" style="flex:1"><input id="manualLng" type="number" step="any" placeholder="Longitude" style="flex:1"><button id="manualAdd">＋ কোঅর্ডিনেট যোগ</button></div>
 <div class="row"><label>দেখানোর কোঅর্ডিনেট <select id="coordFormat"><option value="decimal">WGS84 Decimal</option><option value="dms">WGS84 DMS</option><option value="utm">UTM (WGS84)</option></select></label><label>দূরত্ব <select id="distUnit"><option value="m">মিটার</option><option value="ft">ফুট</option><option value="km">কিমি</option><option value="link">লিংক</option></select></label></div>
 <div class="row"><label>বৃত্তের ব্যাসার্ধ <input id="circleRadius" type="number" min="0.001" step="any" value="100" style="width:76px"></label><label>একক <select id="circleUnit"><option value="m">মিটার</option><option value="ft">ফুট</option><option value="in">ইঞ্চি</option><option value="cm">সেন্টিমিটার</option><option value="km">কিলোমিটার</option><option value="link">লিংক</option></select></label></div>
 <div class="row"><label>ড্রয়িং স্কেল <select id="drawScale"><option value="1">বাস্তব মাপ (1:1)</option><option value="100">1:100</option><option value="200">1:200</option><option value="500">1:500</option><option value="1000">1:1,000</option><option value="2000">1:2,000</option><option value="5000">1:5,000</option><option value="10000">1:10,000</option><option value="custom">কাস্টম</option></select></label><label id="customScaleWrap" style="display:none">1 : <input id="customScale" type="number" min="1" step="1" value="1000" style="width:75px"></label></div>
 <div class="row"><button id="circleMode">⭕ পয়েন্টে বৃত্ত</button><button id="circleIntersections">✳ দুই বৃত্তের ছেদবিন্দু</button></div>
-<div class="row"><label>এরিয়ার একক <select id="areaUnit"><option value="sqm">বর্গমিটার</option><option value="sqft">বর্গফুট</option><option value="acre">একর</option><option value="hectare">হেক্টর</option></select></label><button id="calcArea" class="primary">▱ সব পয়েন্টের এরিয়া</button><button id="resetArea">এরিয়া রিসেট</button></div><div id="areaResult" class="hint">এরিয়া হিসাবের জন্য অন্তত ৩টি পয়েন্ট দিন। পয়েন্টগুলো ধারাবাহিক সীমানা তৈরি করবে।</div>
+<div class="row"><label>এরিয়ার একক <select id="areaUnit"><option value="sqm">বর্গমিটার</option><option value="sqft">বর্গফুট</option><option value="acre">একর</option><option value="hectare">হেক্টর</option></select></label><button id="calcArea" class="primary">▱ নির্বাচিত পয়েন্টের এরিয়া</button><button id="resetArea">এরিয়া রিসেট</button></div><div id="areaResult" class="hint">এরিয়া হিসাবের জন্য অন্তত ৩টি পয়েন্ট দিন। পয়েন্টগুলো ধারাবাহিক সীমানা তৈরি করবে।</div>
 <div class="row"><button id="midpointBtn">↔ নির্বাচিত দুই পয়েন্টের মাঝখান</button><button id="undoPoint">↶ শেষ পয়েন্ট মুছুন</button><button id="clearDrawing">🗑 ড্রয়িং মুছুন</button></div>
-<div class="row"><label>Excel-এর প্রজেক্ট নং <input id="excelProjectNumber" type="number" min="1" step="1" placeholder="001" style="width:82px"></label><label>ফোল্ডার <select id="projectFolderSelect" style="max-width:115px"><option value="">সাধারণ</option></select></label><button id="newProjectFolder" type="button">📁 নিউ ফোল্ডার</button><button id="exportExcel" class="primary">📊 Excel + ম্যাপ ছবি</button><button id="exportMapImage">🖼️ কাজের ছবি PNG</button><button id="saveDrawing">💾 প্রজেক্টে ড্রয়িং সেভ</button></div>
-<div id="drawStatus">ম্যাপে টাচ করে পয়েন্ট দিন। পয়েন্টগুলো ১, ২, ৩… নম্বর পাবে। পরপর পয়েন্টের দূরত্ব ও মাঝবিন্দু হিসাব হবে।</div><div id="drawList"></div><div class="row" style="border-top:1px solid #d5e0ea;padding-top:6px"><b>📁 সেভ করা Excel ফাইল</b><button id="refreshExcelFiles" type="button">↻ তালিকা</button></div><div id="excelFileList" class="hint">এই প্রজেক্টের Excel ফাইল এখানে নম্বর অনুযায়ী থাকবে।</div><div class="hint">Excel-এ পয়েন্ট নম্বর, নাম, অক্ষাংশ-দ্রাঘিমাংশ, নির্বাচিত কোঅর্ডিনেট ফরম্যাট, পরের পয়েন্টের দূরত্ব, লাইন দৈর্ঘ্য, মাঝবিন্দু, বৃত্তের ব্যাসার্ধ ও এরিয়া থাকবে। স্কেল 1:N হলে বৃত্তের ইনপুট মাপকে N গুণ করে বাস্তব মিটারে রূপান্তর করা হবে।</div></div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script>
+<div class="row"><button id="exportExcel" class="primary">📊 এই প্লটের Excel</button><button id="exportMulti">📚 একাধিক প্লট একত্রে Excel</button><button id="saveDrawing">💾 প্রজেক্টে ড্রয়িং সেভ</button></div>
+<div id="drawStatus">ম্যাপে টাচ করে পয়েন্ট দিন। পয়েন্টগুলো ১, ২, ৩… নম্বর পাবে। পরপর পয়েন্টের দূরত্ব ও মাঝবিন্দু হিসাব হবে।</div><div id="multiPick" style="display:none"></div><div id="drawList"></div><div id="excelList"></div><div class="hint">Excel-এ পয়েন্ট নম্বর, নাম, অক্ষাংশ-দ্রাঘিমাংশ, নির্বাচিত কোঅর্ডিনেট ফরম্যাট, পরের পয়েন্টের দূরত্ব, লাইন দৈর্ঘ্য, মাঝবিন্দু, বৃত্তের ব্যাসার্ধ ও এরিয়া থাকবে। স্কেল 1:N হলে বৃত্তের ইনপুট মাপকে N গুণ করে বাস্তব মিটারে রূপান্তর করা হবে।</div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script><script>
 (()=>{'use strict';const $=id=>document.getElementById(id),img=$('overlayImg'),file=$('file'),status=$('status'),catcher=$('tapCatcher'),badge=$('badge');
 const DB='BanglaCADOverlayProjects',STORE='projects';let saveHandle=null,imgAdj=false,swapT=0,undoStack=[],curStroke=null,gSnap=null,swapping=false,liveOn=false,dirty=false,editVer=0,blobUrl=null,curOp=.65,map=null,mapMarkers=[],moveOn=true,db,maps=[],selected=-1,projectId='',phase='idle',imgPts=[],mapPts=[],pins=[],brush='',drawing=false,last=null,editCanvas=document.createElement('canvas'),editCtx=null;
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);const esc=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function openDB(){return new Promise((res,rej)=>{const q=indexedDB.open(DB,1);q.onupgradeneeded=()=>q.result.createObjectStore(STORE,{keyPath:'id'});q.onsuccess=()=>{db=q.result;res()};q.onerror=()=>rej(q.error)})}function req(mode,fn){return new Promise((res,rej)=>{const t=db.transaction(STORE,mode),s=t.objectStore(STORE),r=fn(s);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}const allProjects=()=>req('readonly',s=>s.getAll());
-async function refreshProjectFolders(){
- const all=await allProjects(),folders=[...new Set(all.map(p=>p.folderName).filter(Boolean))];
- const sel=$('projectFolderSelect');if(!sel)return;const current=sel.value;
- sel.innerHTML='<option value="">সাধারণ</option>'+folders.map(f=>`<option value="${esc(f)}">${esc(f)}</option>`).join('');
- if(folders.includes(current))sel.value=current;
-}
-async function refreshProjects(){
- const a=await allProjects();const groups={};
- a.sort((x,y)=>(Number(x.projectNumber)||0)-(Number(y.projectNumber)||0));
- a.forEach(p=>{const f=p.folderName||'সাধারণ';(groups[f]||(groups[f]=[])).push(p)});
- const select=$('projectSelect');select.innerHTML='<option value="">সেভ করা প্রজেক্ট বাছুন</option>';
- Object.keys(groups).sort((x,y)=>x==='সাধারণ'?-1:y==='সাধারণ'?1:x.localeCompare(y,'bn')).forEach(folder=>{
-  const og=document.createElement('optgroup');og.label='📁 '+folder;
-  groups[folder].forEach(p=>{const op=document.createElement('option');op.value=p.id;op.textContent=(p.projectNumber?String(p.projectNumber)+' — ':'')+(p.name||'নামহীন');og.appendChild(op)});
-  select.appendChild(og);
- });
- await refreshProjectFolders();
-}
-$('newProjectFolder').onclick=async()=>{
- const name=prompt('নতুন ফোল্ডারের নাম লিখুন:');if(!name||!name.trim())return;
- const folder=name.trim();const sel=$('projectFolderSelect');
- if(![...sel.options].some(o=>o.value===folder)){const op=document.createElement('option');op.value=folder;op.textContent=folder;sel.appendChild(op)}
- sel.value=folder;
- $('status').textContent=`“${folder}” ফোল্ডার নির্বাচন করা হয়েছে। এখন নতুন প্রজেক্ট তৈরি করে নাম ও নম্বর দিন, কাজ শেষে সেভ করুন।`;
-};
-$('projectName').addEventListener('input',()=>updateActiveProjectBadge());
-function updateActiveProjectBadge(){
- const el=$('activeProjectBadge');if(!el)return;
- const no=$('projectNumber').value||'—',name=$('projectName').value.trim()||'নাম দেওয়া হয়নি';
- el.textContent=projectId?`বর্তমান প্রজেক্ট: ${no} — ${name} (শুধু এই প্রজেক্টে কাজ সেভ হবে)`:'বর্তমান প্রজেক্ট: নতুন কাজ শুরু হয়নি';
-}
-async function nextProjectNumber(){const a=await allProjects();return a.reduce((m,p)=>Math.max(m,parseInt(p.projectNumber,10)||0),0)+1}
-function setProjectNumber(v){$('projectNumber').value=v??'';$('excelProjectNumber').value=v??''}
-$('projectNumber').addEventListener('input',()=>{$('excelProjectNumber').value=$('projectNumber').value;updateActiveProjectBadge()});$('excelProjectNumber').addEventListener('input',()=>{$('projectNumber').value=$('excelProjectNumber').value;updateActiveProjectBadge()});
+function refreshProjects(){allProjects().then(a=>{$('projectSelect').innerHTML='<option value="">সেভ করা প্রজেক্ট বাছুন</option>'+a.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')})}
 function initEdit(data){editCanvas.width=data.width;editCanvas.height=data.height;editCtx=editCanvas.getContext('2d',{willReadFrequently:true});editCtx.drawImage(data,0,0);return editCanvas.toDataURL('image/png')}
 function showMap(i){if(selected>=0&&maps[selected])maps[selected].undoStack=undoStack;flushEdit();liveOff();dirty=false;needSwap=false;clearTimeout(swapT);curStroke=null;selected=i;undoStack=(i>=0&&maps[i]&&Array.isArray(maps[i].undoStack))?maps[i].undoStack:[];updUndo();const m=maps[i];renderGhosts();if(!m){img.style.display='none';$('selectedTools').style.display='none';renderGhosts();renderList();return}img.onload=()=>{if(swapping){swapping=false;liveOff();applySettings();renderGhosts();return}editCanvas.width=img.naturalWidth;editCanvas.height=img.naturalHeight;editCtx=editCanvas.getContext('2d',{willReadFrequently:true});editCtx.drawImage(img,0,0);applySettings();renderGhosts();};setMove(false);if(m.geo&&map)map.setView([m.geo.lat,m.geo.lng],m.geo.z0,{animate:false});img.src=m.data;img.style.display=m.on===false?'none':'block';$('selectedTools').style.display='block';updateLockUI();$('selectedTitle').textContent=`Map ${String(m.serial).padStart(3,'0')} — ${m.name}`;$('opacity').value=m.opacity??65;$('brightness').value=m.brightness??100;$('contrast').value=m.contrast??100;$('saturation').value=m.saturation??100;$('opVal').value=(m.opacity??65)+'%';$('brVal').value=(m.brightness??100)+'%';$('ctVal').value=(m.contrast??100)+'%';$('satVal').value=(m.saturation??100)+'%';applySettings();renderGhosts();renderList()}
 function visualFilter(m){return `brightness(${(m.brightness??100)/100}) contrast(${(m.contrast??100)/100}) saturate(${(m.saturation??100)/100})`}
@@ -109,153 +48,7 @@ function renderList(){$('count').textContent='মোট: '+maps.length+' | ON: '
 $('toggleMapList').onclick=()=>{const box=$('mapList'),open=box.style.display!=='none';box.style.display=open?'none':'block';$('toggleMapList').textContent=open?'☰ তালিকা দেখুন':'✕ তালিকা লুকান';};
 function moveMap(i,d){const j=i+d;if(j<0||j>=maps.length)return;[maps[i],maps[j]]=[maps[j],maps[i]];showMap(j)}
 $('upload').onclick=$('addMaps').onclick=()=>file.click();file.onchange=async()=>{const fs=[...file.files||[]];if(!fs.length)return;const valid=fs.filter(f=>/^image\/(jpeg|png|webp)$/.test(f.type));if(!valid.length){status.textContent='JPG, PNG অথবা WEBP ছবি নির্বাচন করুন।';file.value='';return}const addBtn=$('addMaps');addBtn.disabled=true;$('upload').disabled=true;let added=0,failed=0;try{for(let n=0;n<valid.length;n++){const f=valid[n];status.textContent=`ম্যাপ যোগ হচ্ছে ${n+1}/${valid.length} — ${f.name} (আগে যোগ হয়েছে ${added}টি)`;await new Promise(r=>setTimeout(r,0));try{let data=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>rej(r.error||new Error('ফাইল পড়া যায়নি'));r.readAsDataURL(f)});data=await shrink(data,+$('imgMax').value);const serial=maps.reduce((mx,m)=>Math.max(mx,Number(m.serial)||0),0)+1;maps.push({on:true,locked:false,capDone:+$('imgMax').value,id:uid(),serial,name:f.name,fileName:f.name,data,opacity:65,brightness:100,contrast:100,saturation:100,left:50,top:50,transform:'translate(-50%,-50%)',width:'auto',maxWidth:'82vw',maxHeight:'65vh'});added++;}catch(err){failed++;}}if(added){$('projectName').value=$('projectName').value||'নতুন প্রজেক্ট';showMap(maps.length-1);renderGhosts();renderList();status.textContent=`${added}টি ম্যাপ যোগ হয়েছে${failed?`, ${failed}টি ফাইলে সমস্যা হয়েছে`:''}। কোনো ২০-ফাইল সীমা নেই। সব ON ম্যাপ একসঙ্গে দেখা যাবে; তালিকা স্ক্রল করে যেকোনো ম্যাপ নির্বাচন করুন। প্রয়োজন হলে প্রতিটি ম্যাপ আলাদাভাবে OFF/ON, আনলক করে শিফট/অ্যালাইন/ক্লিনিং করুন। এখন প্রজেক্ট সেভ করুন।`;}else status.textContent='কোনো ছবি যোগ করা যায়নি। JPG, PNG অথবা WEBP ফাইল নির্বাচন করুন।';}catch(e){status.textContent='আপলোডে সমস্যা: '+e.message}finally{file.value='';addBtn.disabled=false;$('upload').disabled=false;renderList()}};
-async function saveCurrentProject(showNotice=false){
- if(!db)throw Error('প্রজেক্ট স্টোরেজ এখনো প্রস্তুত নয়।');
- flushEdit();projectId=projectId||uid();
- const previous=await req('readonly',st=>st.get(projectId));
- maps.forEach(m=>{if(m.geo){m.positionFixed=true;m.locked=true}});
- const name=$('projectName').value.trim()||'নামহীন প্রজেক্ট';
- const no=String($('projectNumber').value||$('excelProjectNumber').value||previous?.projectNumber||'').trim();
- if(!no)throw Error('প্রজেক্ট সেভ করার আগে প্রজেক্ট নম্বর দিন।');
- const duplicate=(await allProjects()).find(p=>p.id!==projectId&&String(p.projectNumber||'').trim()===no);
- if(duplicate)throw Error(`প্রজেক্ট নম্বর ${no} আগে থেকেই “${duplicate.name||'অন্য প্রজেক্ট'}” নামে আছে। নতুন নম্বর দিন অথবা পুরোনো প্রজেক্ট খুলুন।`);
- const record={...(previous||{}),id:projectId,name,projectNumber:no,folderName:$('projectFolderSelect')?.value||previous?.folderName||'',updated:Date.now(),maps:maps.map(m=>{const c={...m};delete c.undoStack;return c}),drawing:Array.isArray(drawPoints)?drawPoints:[],drawingAreaClosed:!!drawAreaClosed,excelFiles:previous?.excelFiles||[]};
- await req('readwrite',st=>st.put(record));await refreshProjects();$('projectSelect').value=projectId;updateActiveProjectBadge();
- if(showNotice)status.textContent=`“${name}” (প্রজেক্ট নং ${no||'নির্ধারিত নয়'}) সেভ হয়েছে। ম্যাপ ${maps.length}টি, ড্রয়িং পয়েন্ট ${record.drawing.length}টি।`;
- return record;
-}
-$('newProject').onclick=async()=>{try{
- // বর্তমান প্রজেক্ট আগে আলাদাভাবে সেভ হবে; নতুন প্রজেক্টের পরিচয় না দেওয়া পর্যন্ত কিছু খালি করা হবে না।
- if(projectId){
-  const hasWork=maps.length||drawPoints.length||$('projectName').value.trim();
-  if(hasWork)await saveCurrentProject(false);
- }
- const suggested=await nextProjectNumber();
- const enteredNo=prompt(`নতুন প্রজেক্টের ধারাবাহিক নম্বর লিখুন।\\nপরের প্রস্তাবিত নম্বর: ${suggested}`,String(suggested));
- if(enteredNo===null)return;
- const no=enteredNo.trim();
- if(!/^\\d+$/.test(no)||Number(no)<1)throw Error('সঠিক ধনাত্মক প্রজেক্ট নম্বর লিখুন।');
- const all=await allProjects();
- const duplicate=all.find(p=>String(p.projectNumber||'').trim()===no);
- if(duplicate)throw Error(`প্রজেক্ট নম্বর ${no} আগে থেকেই “${duplicate.name||'নামহীন'}” নামে সেভ আছে। পুরোনোটি খুলুন অথবা অন্য নম্বর দিন।`);
- const suggestedName=`প্রজেক্ট ${no}`;
- const enteredName=prompt(`প্রজেক্ট ${no}-এর নাম লিখুন:`,suggestedName);
- if(enteredName===null)return;
- const name=enteredName.trim();if(!name)throw Error('প্রজেক্টের নাম খালি রাখা যাবে না।');
- // নতুন প্রজেক্টের জন্য সম্পূর্ণ নতুন আলাদা ID ও খালি ডেটা রেকর্ড।
- maps=[];selected=-1;drawPoints=[];drawAreaClosed=false;drawSelected=[];drawLayers=[];projectId=uid();
- $('projectName').value=name;setProjectNumber(no);
- const blank={id:projectId,name,projectNumber:no,folderName:$('projectFolderSelect')?.value||'',updated:Date.now(),maps:[],drawing:[],drawingAreaClosed:false,excelFiles:[]};
- await req('readwrite',st=>st.put(blank));
- await refreshProjects();$('projectSelect').value=projectId;updateActiveProjectBadge();
- showMap(-1);renderDrawing();renderExcelFiles();
- status.textContent=`নতুন প্রজেক্ট “${name}” — নম্বর ${no} তৈরি হয়েছে। এখন এই প্রজেক্টে কাজ করুন। কাজ শেষে “প্রজেক্ট সেভ” চাপুন। আগের প্রজেক্ট আলাদা সেভ অবস্থায় থাকবে।`;
- }catch(e){status.textContent='নতুন প্রজেক্ট তৈরি/আগের কাজ সেভ করা যায়নি: '+e.message}};
-$('nextProjectNumber').onclick=async()=>{setProjectNumber(await nextProjectNumber());};
-
-// নির্দিষ্ট প্রজেক্ট নম্বরের সম্পূর্ণ ব্যাকআপ: অন্য কোনো প্রজেক্ট এতে যুক্ত হবে না।
-async function blobToDataUrl(blob){return await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=()=>reject(r.error||new Error('Excel ফাইল পড়া যায়নি'));r.readAsDataURL(blob);});}
-$('downloadProjectBackup').onclick=async()=>{
- const btn=$('downloadProjectBackup');btn.disabled=true;
- try{
-  const wanted=String($('backupProjectNumber').value||'').trim();
-  if(!wanted)throw Error('যে প্রজেক্টের ব্যাকআপ চান তার নম্বর লিখুন।');
-  const all=await allProjects();
-  const matches=all.filter(p=>String(p.projectNumber||'').trim()===wanted);
-  if(!matches.length)throw Error(`প্রজেক্ট নং ${wanted} সেভ করা তালিকায় পাওয়া যায়নি। আগে প্রজেক্টটি সেভ করুন।`);
-  if(matches.length>1)throw Error(`প্রজেক্ট নং ${wanted} একাধিকবার আছে। প্রজেক্ট নম্বর আলাদা করে দিন।`);
-  const p=matches[0];
-  $('status').textContent=`প্রজেক্ট নং ${wanted} ব্যাকআপ তৈরি হচ্ছে…`;
-  const backup={format:'BanglaCADMapPro-ProjectBackup',backupVersion:1,createdAt:new Date().toISOString(),project:{...p,maps:Array.isArray(p.maps)?p.maps:[],drawing:Array.isArray(p.drawing)?p.drawing:[],excelFiles:[]}};
-  for(const f of (p.excelFiles||[])){
-   const copy={...f};
-   if(f.blob instanceof Blob){copy.blobDataUrl=await blobToDataUrl(f.blob);delete copy.blob;}
-   else if(f.blob){copy.blobDataUrl=await blobToDataUrl(new Blob([f.blob]));delete copy.blob;}
-   backup.project.excelFiles.push(copy);
-  }
-  const safe=String(p.name||'Project').replace(/[^\p{L}\p{N}_-]+/gu,'_')||'Project';
-  const fileName=`Project_${String(wanted).padStart(3,'0')}_Backup_${safe}.json`;
-  const blob=new Blob([JSON.stringify(backup)],{type:'application/json;charset=utf-8'});
-  downloadBlob(blob,fileName);
-  $('status').textContent=`শুধু প্রজেক্ট নং ${wanted}-এর ব্যাকআপ ডাউনলোডে পাঠানো হয়েছে। এতে ${backup.project.maps.length}টি ম্যাপ, ${backup.project.drawing.length}টি ড্রয়িং পয়েন্ট এবং ${backup.project.excelFiles.length}টি Excel ফাইল রয়েছে।`;
- }catch(e){$('status').textContent='ব্যাকআপ তৈরি/ডাউনলোড করা যায়নি: '+e.message;}
- finally{btn.disabled=false;}
-};
-
-
-// একাধিক প্রজেক্ট নির্বাচন, একত্রে ব্যাকআপ এবং এক Excel-এ আলাদা শিট
-async function renderBackupProjectChoices(){
- const box=$('backupProjectChoices'); if(!box)return;
- const all=(await allProjects()).slice().sort((a,b)=>(Number(a.projectNumber)||0)-(Number(b.projectNumber)||0));
- if(!all.length){box.textContent='এখনও কোনো সেভ করা প্রজেক্ট নেই।';return;}
- box.innerHTML=all.map(p=>`<label style="display:flex;gap:7px;align-items:center;padding:5px;border-bottom:1px solid #edf1f5"><input type="checkbox" class="backupProjectCheck" value="${esc(p.id)}"><span><b>নং ${esc(p.projectNumber||'—')}</b> — ${esc(p.name||'নামহীন')} <small>(${(p.maps||[]).length} ম্যাপ, ${(p.drawing||[]).length} পয়েন্ট)</small></span></label>`).join('');
-}
-function selectedBackupIds(){return [...document.querySelectorAll('.backupProjectCheck:checked')].map(x=>x.value);}
-async function makeProjectBackupObject(p){
- const project={...p,maps:Array.isArray(p.maps)?p.maps:[],drawing:Array.isArray(p.drawing)?p.drawing:[],excelFiles:[]};
- for(const f of (p.excelFiles||[])){
-  const copy={...f};
-  if(f.blob instanceof Blob){copy.blobDataUrl=await blobToDataUrl(f.blob);delete copy.blob;}
-  else if(f.blob){copy.blobDataUrl=await blobToDataUrl(new Blob([f.blob]));delete copy.blob;}
-  project.excelFiles.push(copy);
- }
- return project;
-}
-$('refreshBackupSelection').onclick=renderBackupProjectChoices;
-$('selectAllBackup').onclick=()=>document.querySelectorAll('.backupProjectCheck').forEach(x=>x.checked=true);
-$('clearBackupSelection').onclick=()=>document.querySelectorAll('.backupProjectCheck').forEach(x=>x.checked=false);
-$('downloadSelectedBackup').onclick=async()=>{
- const b=$('downloadSelectedBackup');b.disabled=true;
- try{
-  const ids=selectedBackupIds();if(!ids.length)throw Error('অন্তত একটি প্রজেক্ট সিলেক্ট করুন।');
-  const all=await allProjects(),chosen=ids.map(id=>all.find(p=>p.id===id)).filter(Boolean);
-  if(!chosen.length)throw Error('সিলেক্ট করা প্রজেক্ট পাওয়া যায়নি।');
-  $('status').textContent=`${chosen.length}টি প্রজেক্টের ব্যাকআপ তৈরি হচ্ছে…`;
-  const projects=[];for(const p of chosen)projects.push(await makeProjectBackupObject(p));
-  const payload={format:'BanglaCADMapPro-MultiProjectBackup',backupVersion:1,createdAt:new Date().toISOString(),projectCount:projects.length,projects};
-  const nums=chosen.map(p=>String(p.projectNumber||'NA').padStart(3,'0')).join('_');
-  downloadBlob(new Blob([JSON.stringify(payload)],{type:'application/json;charset=utf-8'}),`BanglaCAD_Selected_Projects_${nums}.json`);
-  $('status').textContent=`${chosen.length}টি নির্বাচিত প্রজেক্টের ব্যাকআপ এক ফাইলে ডাউনলোড শুরু হয়েছে। প্রতিটি প্রজেক্ট আলাদা রেকর্ড হিসেবে সংরক্ষিত।`;
- }catch(e){$('status').textContent='একত্রে ব্যাকআপ করা যায়নি: '+e.message;}
- finally{b.disabled=false;}
-};
-$('downloadSelectedExcel').onclick=async()=>{
- const b=$('downloadSelectedExcel');b.disabled=true;
- try{
-  const ids=selectedBackupIds();if(!ids.length)throw Error('অন্তত একটি প্রজেক্ট সিলেক্ট করুন।');
-  if(typeof ExcelJS==='undefined')throw Error('Excel লাইব্রেরি লোড হয়নি। ইন্টারনেট চালু রেখে পেজ রিফ্রেশ করুন।');
-  const all=await allProjects(),chosen=ids.map(id=>all.find(p=>p.id===id)).filter(Boolean);
-  if(!chosen.length)throw Error('সিলেক্ট করা প্রজেক্ট পাওয়া যায়নি।');
-  const wb=new ExcelJS.Workbook();wb.creator='Bangla CAD Map Pro';wb.subject='Selected projects survey data';wb.created=new Date();
-  const used=new Set();
-  const sheetName=(base)=>{let n=String(base).replace(/[\\/*?:\\[\\]]/g,'_').slice(0,31)||'Project';let out=n,k=2;while(used.has(out.toLowerCase())){const suf='_'+k++;out=n.slice(0,31-suf.length)+suf;}used.add(out.toLowerCase());return out;};
-  for(const p of chosen){
-   const no=String(p.projectNumber||'NA'),name=p.name||'প্রজেক্ট',pts=Array.isArray(p.drawing)?p.drawing:[];
-   const coord=wb.addWorksheet(sheetName(`P${no}_Coordinates`));
-   coord.columns=[{width:12},{width:24},{width:22},{width:22},{width:34}];
-   coord.mergeCells('A1:E1');coord.getCell('A1').value=`প্রজেক্ট নং ${no} — ${name} — কোঅর্ডিনেট`;
-   coord.getRow(1).font={bold:true,size:14};
-   coord.addRow(['Point No','Point Name','Latitude','Longitude','Formatted Coordinate']);
-   pts.forEach((pt,i)=>coord.addRow([i+1,pt.name||`Point ${i+1}`,pt.lat??'',pt.lng??'',`${pt.lat??''}, ${pt.lng??''}`]));
-   coord.getRow(2).font={bold:true,color:{argb:'FFFFFFFF'}};coord.getRow(2).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF1769AA'}};
-   coord.pageSetup={orientation:'landscape',fitToPage:true,fitToWidth:1,fitToHeight:0};
-   const ms=wb.addWorksheet(sheetName(`P${no}_Measurements`));
-   ms.columns=[{width:22},{width:22},{width:22},{width:22},{width:22}];
-   ms.mergeCells('A1:E1');ms.getCell('A1').value=`প্রজেক্ট নং ${no} — ${name} — মাপ ও সারাংশ`;ms.getRow(1).font={bold:true,size:14};
-   ms.addRow(['লাইন নং','শুরু পয়েন্ট','শেষ পয়েন্ট','দূরত্ব (মিটার)','মাঝ Latitude']);
-   for(let i=1;i<pts.length;i++){const d=hav(pts[i-1],pts[i]),mid=midpoint(pts[i-1],pts[i]);ms.addRow([i,pts[i-1].name||`Point ${i}`,pts[i].name||`Point ${i+1}`,Number(d.toFixed(3)),mid.lat]);}
-   ms.addRow([]);ms.addRow(['প্রজেক্ট নম্বর',no]);ms.addRow(['প্রজেক্টের নাম',name]);ms.addRow(['ম্যাপ সংখ্যা',(p.maps||[]).length]);ms.addRow(['পয়েন্ট সংখ্যা',pts.length]);ms.addRow(['সীমানা বন্ধ',p.drawingAreaClosed?'হ্যাঁ':'না']);ms.addRow(['ক্ষেত্রফল (বর্গমিটার)',p.drawingAreaClosed&&pts.length>=3?Number(polygonAreaM2(pts).toFixed(3)):'' ]);ms.addRow(['Excel ফাইল সংখ্যা',(p.excelFiles||[]).length]);
-   ms.getRow(2).font={bold:true,color:{argb:'FFFFFFFF'}};ms.getRow(2).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF39845A'}};
-   ms.pageSetup={orientation:'landscape',fitToPage:true,fitToWidth:1,fitToHeight:0};
-  }
-  const buf=await wb.xlsx.writeBuffer(),blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-  const nums=chosen.map(p=>String(p.projectNumber||'NA').padStart(3,'0')).join('_');
-  downloadBlob(blob,`BanglaCAD_Selected_Projects_${nums}.xlsx`);
-  $('status').textContent=`${chosen.length}টি প্রজেক্ট নিয়ে একটি Excel ডাউনলোড হচ্ছে। প্রতিটি প্রজেক্টের কোঅর্ডিনেট ও মাপ আলাদা শিটে রয়েছে।`;
- }catch(e){$('status').textContent='একত্রে Excel তৈরি করা যায়নি: '+e.message;}
- finally{b.disabled=false;}
-};
-
+$('newProject').onclick=()=>{saveHandle=null;plots=[{id:'p'+Date.now().toString(36),name:'প্লট ১',points:[],areaClosed:false,t:Date.now()}];curPlot=0;drawPoints=plots[0].points;drawAreaClosed=false;drawSelected=[];renderPlotBar();renderDrawing();excelFiles=[];renderExcelList();maps=[];selected=-1;projectId=uid();$('projectName').value='';showMap(-1);status.textContent='নতুন প্রজেক্ট তৈরি হয়েছে। নাম লিখে ম্যাপ আপলোড করুন।'};
 // KMZ প্যাকেজ: doc.kml + project.json (এর মধ্যে সব ম্যাপের ছবি সংরক্ষিত থাকে)
 const te=new TextEncoder();
 const CRC_T=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xedb88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
@@ -325,7 +118,7 @@ async function makeKmz(project){
   delete c.data;slim.push(c);
  }
  status.textContent='KMZ ফাইল জোড়া লাগানো হচ্ছে…';await tick();
- const payload=JSON.stringify({format:'BanglaCADOverlayProject',version:4,name:project.name,maps:slim,drawing:project.drawing||[]});
+ const xp=(e,i)=>`excel/excel_${pad(i+1)}.${/\.xlsx$/i.test(e.name)?'xlsx':'xls'}`;(project.excel||[]).forEach((e,i)=>files.push({name:xp(e,i),data:e.bytes||e.xml}));const payload=JSON.stringify({format:'BanglaCADOverlayProject',version:4,id:project.id,name:project.name,maps:slim,drawing:project.drawing||[],drawingAreaClosed:!!project.drawingAreaClosed,plots:project.plots||[],curPlot:project.curPlot||0,excel:(project.excel||[]).map((e,i)=>({name:e.name,t:e.t,path:xp(e,i)}))});
  const kml=`<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2"><Document><name>${esc(project.name)}</name><description>Bangla CAD Map Pro KMZ. Map images are included as GroundOverlay. Project editing data is in project.json.</description>${overlays.join('')}</Document></kml>`;
  return makeZip([{name:'doc.kml',data:kml},{name:'project.json',data:payload},...files]);
 }
@@ -347,9 +140,29 @@ async function saveProjectFile(project){
  if(window.showSaveFilePicker){try{const h=await window.showSaveFilePicker({suggestedName:safe,types:[{description:'Google Earth KMZ',accept:{'application/vnd.google-earth.kmz':['.kmz']}}]});const w=await h.createWritable();await w.write(blob);await w.close();saveHandle=h;return 'KMZ ফাইলটি আপনার নির্বাচিত লোকেশনে সেভ হয়েছে।'}catch(e){if(e&&e.name==='AbortError')return 'লোকেশন নির্বাচন বাতিল হয়েছে; ব্রাউজারের ভেতরের প্রজেক্ট সেভ রাখা হয়েছে।';throw e}}
  const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=safe;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),5000);return 'KMZ ফাইল ডাউনলোডে পাঠানো হয়েছে। Chrome-এর Downloads সেটিংসে লোকেশন বেছে নেওয়ার ব্যবস্থা চালু থাকলে সেখানে সেভের জায়গা নির্বাচন করুন।'
 }
-$('saveProject').onclick=async()=>{try{const p=await saveCurrentProject(true);status.textContent+=` Excel ফাইলের তালিকাও অক্ষত রাখা হয়েছে।`;}catch(e){status.textContent='প্রজেক্ট সেভ করা যায়নি: '+e.message+'। ডিভাইসের স্টোরেজ কম থাকলে কম ছবি দিয়ে চেষ্টা করুন।'}};
-$('exportProject').onclick=async()=>{let u='';try{flushEdit();if(!maps.length){status.textContent='আগে প্রজেক্টে ম্যাপ যোগ করুন।';return}maps.forEach(m=>{if(m.geo){m.positionFixed=true;m.locked=true}});const p={format:'BanglaCADOverlayProject',version:4,name:$('projectName').value.trim()||'প্রজেক্ট',maps,drawing:drawPoints};status.textContent='Google Earth-উপযোগী KMZ তৈরি হচ্ছে…';const bytes=await makeKmz(p),blob=new Blob([bytes],{type:'application/vnd.google-earth.kmz'});u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=(p.name.replace(/[^\p{L}\p{N}_-]+/gu,'_')||'Bangla_CAD_Project')+'.kmz';document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(u)},60000);status.textContent='KMZ তৈরি হয়েছে। অ্যালাইন করা ম্যাপের GroundOverlay ছবিও ফাইলে আছে—Google Earth-এ খোলা যাবে।'}catch(e){if(u)URL.revokeObjectURL(u);status.textContent='KMZ তৈরি/ডাউনলোড করা যায়নি: '+e.message}};
-$('importProject').onclick=()=>$('projectFile').click();
+
+// ===== একই ফাইলে সেভ: একবার ফাইল নির্বাচন/খোলার পর পরের প্রতিটি সেভ ওই ফাইলেই ওভাররাইট হবে =====
+async function ensureHandle(name){
+ if(!window.showSaveFilePicker)return null;
+ if(saveHandle){try{let ok=(await saveHandle.queryPermission({mode:'readwrite'}))==='granted';if(!ok)ok=(await saveHandle.requestPermission({mode:'readwrite'}))==='granted';if(ok)return saveHandle}catch(_){}saveHandle=null}
+ try{saveHandle=await window.showSaveFilePicker({suggestedName:(String(name||'').replace(/[^\p{L}\p{N}_-]+/gu,'_')||'Bangla_CAD_Project')+'.kmz',types:[{description:'Google Earth KMZ',accept:{'application/vnd.google-earth.kmz':['.kmz']}}]});return saveHandle}
+ catch(e){if(e&&e.name==='AbortError')throw e;return null}
+}
+async function saveLinkedKmz(p){
+ const h=await ensureHandle(p.name);if(!h)return null;
+ const bytes=await makeKmz(p),w=await h.createWritable();await w.write(new Blob([bytes],{type:'application/vnd.google-earth.kmz'}));await w.close();return h.name;
+}
+$('saveProject').onclick=async()=>{try{flushEdit();if(!maps.length){status.textContent='সেভ করার আগে অন্তত একটি ম্যাপ আপলোড করুন।';return}const name=$('projectName').value.trim()||'নামহীন প্রজেক্ট';projectId=projectId||uid();maps.forEach(m=>{if(m.geo){m.positionFixed=true;m.locked=true}});
+ let cancelled=false;if(window.showSaveFilePicker){try{await ensureHandle(name)}catch(e){cancelled=true}}
+ commitPlot();const base={id:projectId,name,updated:Date.now(),maps:maps.map(m=>{const c={...m};delete c.undoStack;return c}),drawing:drawPoints,drawingAreaClosed:drawAreaClosed,excelFiles,plots,curPlot};
+ try{await req('readwrite',s=>s.put({...base,fileHandle:saveHandle||null}))}catch(_){await req('readwrite',s=>s.put(base))}
+ refreshProjects();let msg=`“${name}” — ${maps.length}টি ম্যাপসহ প্রজেক্ট এই ব্রাউজারে সেভ হয়েছে।`;
+ if(saveHandle&&!cancelled){status.textContent='ফাইলে সেভ হচ্ছে…';const fn=await saveLinkedKmz({format:'BanglaCADOverlayProject',version:4,id:projectId,name,maps,drawing:drawPoints,drawingAreaClosed:drawAreaClosed,excel:excelFiles,plots,curPlot});msg+=fn?` একই ফাইলে (${fn}) ওভাররাইট হয়ে সেভ হয়েছে—নতুন নামে আলাদা ফাইল হয়নি।`:''}
+ else if(cancelled)msg+=' ফাইল নির্বাচন বাতিল হয়েছে, তাই শুধু ব্রাউজারে সেভ হয়েছে।';
+ else msg+=' এই ব্রাউজার সরাসরি ফাইলে ওভাররাইট সমর্থন করে না (যেমন মোবাইল Chrome); ফাইল পেতে “KMZ সেভ” চাপুন।';
+ status.textContent=msg}catch(e){status.textContent='সেভ করা যায়নি: '+e.message+'। জায়গা কম থাকলে কম ছবি দিয়ে চেষ্টা করুন।'}};
+$('exportProject').onclick=async()=>{let u='';try{flushEdit();if(!maps.length){status.textContent='আগে প্রজেক্টে ম্যাপ যোগ করুন।';return}maps.forEach(m=>{if(m.geo){m.positionFixed=true;m.locked=true}});const p={format:'BanglaCADOverlayProject',version:4,name:$('projectName').value.trim()||'প্রজেক্ট',maps,drawing:drawPoints,id:projectId,drawingAreaClosed:drawAreaClosed,excel:excelFiles,plots:(commitPlot(),plots),curPlot};status.textContent='Google Earth-উপযোগী KMZ তৈরি হচ্ছে…';if(window.showSaveFilePicker){let fn=null,cancelled=false;try{fn=await saveLinkedKmz(p)}catch(e){cancelled=true}if(fn){status.textContent=`KMZ একই ফাইলে (${fn}) ওভাররাইট হয়ে সেভ হয়েছে।`;return}if(cancelled){status.textContent='ফাইল নির্বাচন বাতিল হয়েছে।';return}}const bytes=await makeKmz(p),blob=new Blob([bytes],{type:'application/vnd.google-earth.kmz'});u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=(p.name.replace(/[^\p{L}\p{N}_-]+/gu,'_')||'Bangla_CAD_Project')+'.kmz';document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(u)},60000);status.textContent='KMZ তৈরি হয়েছে। অ্যালাইন করা ম্যাপের GroundOverlay ছবিও ফাইলে আছে—Google Earth-এ খোলা যাবে।'}catch(e){if(u)URL.revokeObjectURL(u);status.textContent='KMZ তৈরি/ডাউনলোড করা যায়নি: '+e.message}};
+$('importProject').onclick=async()=>{if(window.showOpenFilePicker){try{const [h]=await window.showOpenFilePicker({types:[{description:'KMZ / KML',accept:{'application/vnd.google-earth.kmz':['.kmz'],'application/vnd.google-earth.kml+xml':['.kml'],'application/zip':['.zip'],'application/json':['.json']}}]});await loadProjectFile(await h.getFile(),h);return}catch(e){if(e&&e.name==='AbortError')return}}$('projectFile').click()};
 async function zipEntriesCentral(buffer){
  const v=new DataView(buffer),u8=new Uint8Array(buffer);let e=-1;
  for(let i=buffer.byteLength-22;i>=Math.max(0,buffer.byteLength-65558);i--)if(v.getUint32(i,true)===0x06054b50){e=i;break}
@@ -431,7 +244,7 @@ function kmlTextToMaps(xml,files,name){
  }
  return out
 }
-$('projectFile').onchange=async()=>{const f=$('projectFile').files[0];if(!f)return;try{
+async function loadProjectFile(f,h){if(!f)return;try{
  let p=null,imported=[],entries=null;
  if(/\.json$/i.test(f.name)){p=JSON.parse(await f.text())}
  else if(/\.kml$/i.test(f.name)){imported=kmlTextToMaps(await f.text(),{},f.name)}
@@ -440,28 +253,13 @@ $('projectFile').onchange=async()=>{const f=$('projectFile').files[0];if(!f)retu
   if(entries['project.json']){p=JSON.parse(new TextDecoder().decode(entries['project.json']))}
   else{const kmlKey=Object.keys(entries).find(k=>/\.kml$/i.test(k));if(!kmlKey)throw Error('KMZ-এর ভিতরে doc.kml বা KML ফাইল পাওয়া যায়নি');imported=kmlTextToMaps(new TextDecoder().decode(entries[kmlKey]),entries,f.name)}
  }else throw Error('শুধু .KML, .KMZ, .ZIP অথবা JSON ফাইল নির্বাচন করুন');
- if(p){if(p.format!=='BanglaCADOverlayProject'||!Array.isArray(p.maps))throw Error('ভুল Bangla CAD প্রজেক্ট');maps=p.maps;drawPoints=Array.isArray(p.drawing)?p.drawing:[];await rehydrateMaps(maps,entries);maps=maps.filter(m=>m.data);maps.forEach((m,i)=>{m.serial=m.serial||i+1;if(m.fileName&&!m.nameEdited)m.name=m.fileName;m.locked=m.geo?true:!!m.locked;if(m.geo)m.positionFixed=true});await prepMaps();$('projectName').value=p.name||f.name.replace(/\.(kmz|json)$/i,'');status.textContent='Bangla CAD প্রজেক্টের সব ম্যাপ ও এডিটিং সেটিংস খোলা হয়েছে।'}
+ if(p){if(p.format!=='BanglaCADOverlayProject'||!Array.isArray(p.maps))throw Error('ভুল Bangla CAD প্রজেক্ট');maps=p.maps;loadPlotsFrom(p);excelFiles=[];if(Array.isArray(p.excel)&&entries){for(const x of p.excel){const d=entries[x.path];if(d)excelFiles.push({name:x.name,t:x.t||Date.now(),bytes:d.slice()})}}await rehydrateMaps(maps,entries);maps=maps.filter(m=>m.data);maps.forEach((m,i)=>{m.serial=m.serial||i+1;if(m.fileName&&!m.nameEdited)m.name=m.fileName;m.locked=m.geo?true:!!m.locked;if(m.geo)m.positionFixed=true});await prepMaps();$('projectName').value=p.name||f.name.replace(/\.(kmz|json)$/i,'');status.textContent='Bangla CAD প্রজেক্টের সব ম্যাপ ও এডিটিং সেটিংস খোলা হয়েছে।'}
  else{if(!imported.length)throw Error('এই KML/KMZ-এ ব্যবহারযোগ্য GroundOverlay ছবি পাওয়া যায়নি। শুধু Placemark/রেখা থাকলে এই সংস্করণে ছবি হিসেবে আমদানি হবে না।');maps=imported;maps.forEach((m,i)=>m.serial=i+1);$('projectName').value=f.name.replace(/\.(kml|kmz|zip)$/i,'');status.textContent=`${maps.length}টি KML GroundOverlay ম্যাপ আমদানি হয়েছে। যেগুলোর স্থানাঙ্ক ছিল সেগুলো মানচিত্রে বসানো হয়েছে।`}
- projectId=uid();setProjectNumber(await nextProjectNumber());updateActiveProjectBadge();showMap(maps.length?0:-1);renderList();renderDrawing();renderExcelFiles();
- }catch(e){status.textContent='ফাইল খোলা যায়নি: '+e.message} $('projectFile').value=''};
+ projectId=(p&&p.id)||uid();if(!p)excelFiles=[];renderExcelList();saveHandle=(h&&p&&/\.kmz$/i.test(f.name))?h:null;if(saveHandle)status.textContent+=' এখন “প্রজেক্ট সেভ” চাপলে এই একই ফাইলেই সেভ হবে।';showMap(maps.length?0:-1);renderList();renderDrawing();
+ }catch(e){status.textContent='ফাইল খোলা যায়নি: '+e.message} $('projectFile').value=''}
+$('projectFile').onchange=()=>loadProjectFile($('projectFile').files[0],null);
 $('panelToggle').onclick=()=>{const panel=$('panel'),collapsed=panel.classList.toggle('collapsed');$('panelToggle').textContent=collapsed?'☰ কন্ট্রোল খুলুন':'⌄ নিচে লুকান';};
-$('openProject').onclick=async()=>{try{
- const id=$('projectSelect').value;if(!id)return;
- if(projectId&&projectId!==id){
-  const hasCurrent=maps.length||drawPoints.length||$('projectName').value.trim();
-  if(hasCurrent)await saveCurrentProject(false);
- }
- const p=await req('readonly',st=>st.get(id));if(!p)throw Error('নির্বাচিত প্রজেক্টটি পাওয়া যায়নি।');
- projectId=p.id;$('projectName').value=p.name||'';setProjectNumber(p.projectNumber||'');
- await refreshProjectFolders();$('projectFolderSelect').value=p.folderName||'';
- maps=Array.isArray(p.maps)?p.maps:[];drawPoints=Array.isArray(p.drawing)?p.drawing:[];
- drawAreaClosed=!!p.drawingAreaClosed;drawSelected=[];drawLayers=[];
- renderDrawing();renderExcelFiles();
- maps.forEach(m=>{m.locked=m.geo?true:!!m.locked;if(m.geo)m.positionFixed=true});
- await prepMaps();selected=maps.length?0:-1;showMap(selected);renderList();
- $('projectSelect').value=id;updateActiveProjectBadge();
- status.textContent=`প্রজেক্ট ${p.projectNumber||'—'} — ${p.name||'নামহীন'} খোলা হয়েছে। এখন শুধু এই প্রজেক্টের ড্রয়িং, কোঅর্ডিনেট ও মাপ সেভ/Excel হবে। অন্য প্রজেক্ট আলাদা থাকবে।`;
- }catch(e){status.textContent='প্রজেক্ট খোলা যায়নি: '+e.message}};
+$('openProject').onclick=async()=>{const id=$('projectSelect').value;if(!id)return;const p=await req('readonly',s=>s.get(id));if(!p)return;projectId=p.id;saveHandle=p.fileHandle||null;$('projectName').value=p.name;maps=p.maps||[];loadPlotsFrom(p);excelFiles=p.excelFiles||[];renderExcelList();renderDrawing();maps.forEach(m=>{m.locked=m.geo?true:!!m.locked;if(m.geo)m.positionFixed=true});await prepMaps();selected=maps.length?0:-1;showMap(selected);status.textContent=`${p.name} প্রজেক্ট খোলা হয়েছে — ${maps.length}টি ম্যাপ।`};
 $('renameMap').onclick=()=>{if(selected<0)return;const n=prompt('এই ম্যাপের নতুন নাম লিখুন',maps[selected].name);if(n&&n.trim()){maps[selected].name=n.trim();maps[selected].nameEdited=true;$('selectedTitle').textContent=`Map ${String(maps[selected].serial).padStart(3,'0')} — ${n.trim()}`;renderList()}};
 let deletingMap=false;
 $('deleteMap').onclick=async()=>{
@@ -698,7 +496,7 @@ const gl=L.tileLayer('https://mt{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{sub
 L.control.zoom({position:'topright'}).addTo(map);
 $('baseToggle').onclick=()=>{map.removeLayer(cur);cur=cur===gl?es:gl;cur.addTo(map);$('baseToggle').textContent=cur===gl?'🛰 Google':'🛰 Esri'};
 map.on('move zoom drag viewreset zoomend moveend',()=>{syncImage();syncGhosts()});map.on('click',onMapClick)}catch(err){status.textContent='ম্যাপ লোড হয়নি: '+err.message+' (ইন্টারনেট দরকার)'}
-openDB().then(()=>{refreshProjects();renderBackupProjectChoices()}).catch(e=>status.textContent='এই ব্রাউজারে প্রজেক্ট স্টোরেজ চালু হয়নি: '+e.message);
+openDB().then(refreshProjects).catch(e=>status.textContent='এই ব্রাউজারে প্রজেক্ট স্টোরেজ চালু হয়নি: '+e.message);
 /* ---- আলাদা বোর্ড/টুলবার: প্রজেক্ট ও ফাইল · অ্যালাইন বোর্ড · ক্লিনিং টুলবার ---- */
 function expandPanel(){$('panel').classList.remove('collapsed');$('panelToggle').textContent='⌄ নিচে লুকান'}
 function showMsg(t){expandPanel();status.textContent=t}
@@ -737,9 +535,79 @@ function makeDraggable(box,handle,k){
  was=getComputedStyle(box).display!=='none';if(was)fitBox(box,k);
 }
 makeDraggable($('panel'),$('panelHead'),'panel');makeDraggable($('filesPanel'),$('filesHead'),'files');makeDraggable($('alignBoard'),document.querySelector('#alignBoard .abHead'),'align');makeDraggable($('cleanBar'),document.querySelector('#cleanBar .cbHead'),'clean');
-addEventListener('resize',()=>{[['panel','panel'],['filesPanel','files'],['alignBoard','align'],['cleanBar','clean'],['drawPanel','drawing']].forEach(([id,k])=>fitBox($(id),k))});
+addEventListener('resize',()=>{[['panel','panel'],['filesPanel','files'],['alignBoard','align'],['cleanBar','clean']].forEach(([id,k])=>fitBox($(id),k))});
 /* ---- Drawing panel: numbered survey points, line lengths, circle intersections, Excel ---- */
-let drawPoints=[],drawLayers=[],drawMode='idle',drawSelected=[],drawAreaClosed=false;
+let drawPoints=[],drawLayers=[],drawMode='idle',drawSelected=[],drawAreaClosed=false,excelFiles=[];
+function renderExcelList(){const el=$('excelList');if(!el)return;el.innerHTML=excelFiles.length?'<div class="hint"><b>এই প্রজেক্টের Excel ফাইল</b></div>'+excelFiles.map((e,i)=>`<div class="drow"><span>📊 ${esc(e.name)}<br><small>${new Date(e.t).toLocaleString('bn-BD')}</small></span><button data-xl="${i}">⬇</button><button data-xd="${i}">🗑</button></div>`).join(''):''}
+async function persistExcel(){try{if(!projectId||!db)return false;const p=await req('readonly',s=>s.get(projectId));if(!p)return false;p.excelFiles=excelFiles;p.updated=Date.now();await req('readwrite',s=>s.put(p));return true}catch(_){return false}}
+function storeExcel(name,data){const i=excelFiles.findIndex(e=>e.name===name),e={name,bytes:data,t:Date.now()};if(i>=0)excelFiles[i]=e;else excelFiles.push(e);renderExcelList();persistExcel().then(ok=>{if(!ok)$('drawStatus').textContent+=' Excel তালিকায় রাখা হয়েছে; “প্রজেক্ট সেভ” চাপলে প্রজেক্টের সঙ্গে সেভ হবে।'})}
+$('excelList').onclick=ev=>{const b=ev.target.closest('button');if(!b)return;if(b.dataset.xl!==undefined){const e=excelFiles[+b.dataset.xl];if(e)downloadBlob(new Blob([e.bytes||e.xml],{type:/\.xlsx$/i.test(e.name)?XLSX_MIME:'application/vnd.ms-excel'}),e.name)}else if(b.dataset.xd!==undefined){excelFiles.splice(+b.dataset.xd,1);renderExcelList();persistExcel()}};
+// ===== প্লট (একাধিক ড্রয়িং সেট) ও Excel =====
+const XLSX_MIME='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+const bn=n=>Number(n).toLocaleString('bn-BD',{useGrouping:false});
+let plots=[{id:'p'+Date.now().toString(36),name:'প্লট ১',points:[],areaClosed:false,t:Date.now()}],curPlot=0;
+function nextPlotName(){let n=plots.length+1;while(plots.some(p=>p.name===`প্লট ${bn(n)}`))n++;return `প্লট ${bn(n)}`}
+function commitPlot(){const pl=plots[curPlot];if(pl){pl.points=drawPoints;pl.areaClosed=drawAreaClosed}}
+function renderPlotBar(){const s=$('plotSelect');if(!s)return;commitPlot();s.innerHTML=plots.map((p,i)=>`<option value="${i}"${i===curPlot?' selected':''}>${esc(p.name)} (${p.points.length} পয়েন্ট)</option>`).join('')}
+function loadPlotsFrom(p){let list=Array.isArray(p.plots)&&p.plots.length?p.plots:null;if(!list)list=[{id:'p'+Date.now().toString(36),name:'প্লট ১',points:Array.isArray(p.drawing)?p.drawing:[],areaClosed:!!p.drawingAreaClosed,t:Date.now()}];plots=list;curPlot=Math.min(Math.max(0,+p.curPlot||0),plots.length-1);drawPoints=plots[curPlot].points=plots[curPlot].points||[];drawAreaClosed=!!plots[curPlot].areaClosed;drawSelected=[];renderPlotBar()}
+async function persistPlots(){try{commitPlot();if(!projectId||!db)return false;const p=await req('readonly',s=>s.get(projectId));if(!p)return false;p.plots=plots;p.curPlot=curPlot;p.drawing=drawPoints;p.drawingAreaClosed=drawAreaClosed;p.updated=Date.now();await req('readwrite',s=>s.put(p));return true}catch(_){return false}}
+function switchPlot(i){commitPlot();curPlot=i;drawPoints=plots[i].points=plots[i].points||[];drawAreaClosed=!!plots[i].areaClosed;drawSelected=[];drawMode='idle';renderDrawing();if(drawPoints.length&&map){try{map.fitBounds(L.latLngBounds(drawPoints.map(p=>[p.lat,p.lng])).pad(.3),{maxZoom:20})}catch(_){}}persistPlots();$('drawStatus').textContent=`“${plots[i].name}” খোলা হয়েছে — ${drawPoints.length}টি পয়েন্ট।`}
+$('plotSelect').onchange=()=>switchPlot(+$('plotSelect').value);
+$('plotNew').onclick=()=>{commitPlot();plots.push({id:'p'+Date.now().toString(36),name:nextPlotName(),points:[],areaClosed:false,t:Date.now()});switchPlot(plots.length-1);$('drawStatus').textContent=`নতুন “${plots[curPlot].name}” তৈরি হয়েছে। এখন এই প্লটের পয়েন্ট দিন; আগের প্লট সেভ আছে।`};
+$('plotRename').onclick=()=>{const n=prompt('প্লটের নাম বা নম্বর লিখুন',plots[curPlot].name);if(n&&n.trim()){plots[curPlot].name=n.trim();renderPlotBar();persistPlots()}};
+$('plotDel').onclick=()=>{if(!confirm(`“${plots[curPlot].name}” প্লট ও এর সব পয়েন্ট মুছবেন?`))return;if(plots.length===1){drawPoints=[];drawAreaClosed=false;plots[0].points=drawPoints;plots[0].areaClosed=false}else{plots.splice(curPlot,1);curPlot=Math.max(0,curPlot-1);drawPoints=plots[curPlot].points;drawAreaClosed=!!plots[curPlot].areaClosed}drawSelected=[];renderDrawing();persistPlots()};
+const colName=n=>{let s='';n++;while(n>0){const m=(n-1)%26;s=String.fromCharCode(65+m)+s;n=Math.floor((n-1)/26)}return s};
+const xesc=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function sheetXml(rows,widths){return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><cols><col min="1" max="14" width="'+(widths||19)+'" customWidth="1"/></cols><sheetData>'+rows.map((r,i)=>`<row r="${i+1}">`+r.map((c,j)=>{if(c===''||c==null)return'';const o=(typeof c==='object')?c:{v:c},ref=colName(j)+(i+1),st=o.b?' s="1"':'';return(typeof o.v==='number'&&Number.isFinite(o.v))?`<c r="${ref}"${st}><v>${o.v}</v></c>`:`<c r="${ref}"${st} t="inlineStr"><is><t xml:space="preserve">${xesc(o.v)}</t></is></c>`}).join('')+'</row>').join('')+'</sheetData>'}
+function plotStats(pl){const pts=pl.points||[],segs=pts.map((p,i)=>i?hav(pts[i-1],p):0),closed=!!pl.areaClosed&&pts.length>=3,closing=closed?hav(pts[pts.length-1],pts[0]):0;return{segs,closed,closing,perim:segs.reduce((a,b)=>a+b,0)+closing,area:closed?polygonAreaM2(pts):0}}
+function niceLen(max){const b=Math.pow(10,Math.floor(Math.log10(max)));for(const m of [5,2,1]){if(m*b<=max)return m*b}return b}
+async function renderPlotsPng(list,title){
+ const W=1400,H=1000,M=100,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,W,H);
+ const all=list.flatMap(p=>p.points);if(!all.length)return null;
+ const lat0=all.reduce((a,p)=>a+p.lat,0)/all.length,xy=p=>toLocal(p,lat0);let minX=1e18,maxX=-1e18,minY=1e18,maxY=-1e18;
+ all.forEach(p=>{const q=xy(p),r=p.radius||0;minX=Math.min(minX,q.x-r);maxX=Math.max(maxX,q.x+r);minY=Math.min(minY,q.y-r);maxY=Math.max(maxY,q.y+r)});
+ const rx=Math.max(maxX-minX,1),ry=Math.max(maxY-minY,1),k=Math.min((W-2*M)/rx,(H-2*M-30)/ry),ox=(W-rx*k)/2-minX*k,oy=(H-ry*k)/2+maxY*k+10,sx=x=>ox+x*k,sy=y=>oy-y*k,P=p=>{const q=xy(p);return[sx(q.x),sy(q.y)]};
+ const cols=['#0b65c2','#c2410c','#15803d','#7e22ce','#be123c','#0e7490','#a16207','#4d7c0f'],F='"Noto Sans Bengali",system-ui,sans-serif';
+ const halo=(t,x,y,font,col)=>{g.font=font;g.textAlign='center';g.textBaseline='middle';g.lineWidth=4;g.strokeStyle='#fff';g.strokeText(t,x,y);g.fillStyle=col;g.fillText(t,x,y)};
+ list.forEach((pl,pi)=>{const col=cols[pi%cols.length],pts=pl.points,st=plotStats(pl);if(!pts.length)return;
+  if(st.closed){g.beginPath();pts.forEach((p,i)=>{const[x,y]=P(p);i?g.lineTo(x,y):g.moveTo(x,y)});g.closePath();g.fillStyle=col+'26';g.fill();g.lineWidth=3;g.strokeStyle=col;g.stroke()}
+  else if(pts.length>1){g.beginPath();pts.forEach((p,i)=>{const[x,y]=P(p);i?g.lineTo(x,y):g.moveTo(x,y)});g.lineWidth=3;g.strokeStyle=col;g.stroke()}
+  pts.forEach(p=>{if(p.radius){const[x,y]=P(p);g.beginPath();g.arc(x,y,p.radius*k,0,7);g.lineWidth=2;g.strokeStyle=col;g.setLineDash([8,6]);g.stroke();g.setLineDash([])}});
+  const segN=st.closed?pts.length:pts.length-1;for(let i=0;i<segN;i++){const a=pts[i],b=pts[(i+1)%pts.length],[x1,y1]=P(a),[x2,y2]=P(b);halo(distVal(i<pts.length-1?st.segs[i+1]:st.closing),(x1+x2)/2,(y1+y2)/2,'15px '+F,'#111')}
+  pts.forEach((p,i)=>{const[x,y]=P(p);g.beginPath();g.arc(x,y,13,0,7);g.fillStyle=col;g.fill();g.lineWidth=2;g.strokeStyle='#fff';g.stroke();g.fillStyle='#fff';g.font='bold 13px '+F;g.textAlign='center';g.textBaseline='middle';g.fillText(String(i+1),x,y+1)});
+  const cx=pts.reduce((a,p)=>a+P(p)[0],0)/pts.length,cy=pts.reduce((a,p)=>a+P(p)[1],0)/pts.length;halo(pl.name,cx,cy-(st.closed?12:26),'bold 22px '+F,col);if(st.closed)halo(areaText(st.area),cx,cy+14,'17px '+F,'#111')});
+ halo(title,W/2,32,'bold 24px '+F,'#111');
+ const nl=niceLen(220/k),bx=M/2+20,by=H-40;g.strokeStyle='#111';g.lineWidth=3;g.beginPath();g.moveTo(bx,by);g.lineTo(bx+nl*k,by);g.moveTo(bx,by-7);g.lineTo(bx,by+7);g.moveTo(bx+nl*k,by-7);g.lineTo(bx+nl*k,by+7);g.stroke();halo(nl>=1000?nl/1000+' km':nl+' m',bx+nl*k/2,by-18,'15px '+F,'#111');
+ g.fillStyle='#111';g.beginPath();g.moveTo(W-60,50);g.lineTo(W-72,90);g.lineTo(W-60,82);g.lineTo(W-48,90);g.closePath();g.fill();halo('N',W-60,106,'bold 18px '+F,'#111');
+ const blob=await new Promise(r=>c.toBlob(r,'image/png'));return{bytes:new Uint8Array(await blob.arrayBuffer()),w:W,h:H}}
+async function buildPlotsXlsx(list){
+ const proj=$('projectName').value.trim()||'প্রজেক্ট',stats=list.map(plotStats),A=m2=>[m2,m2*10.7639104167,m2/4046.8564224,m2/40.468564224,m2/10000].map(v=>Number(v.toFixed(4))),B=(a)=>a.map(v=>({v,b:1}));
+ const rows=[[{v:`Bangla CAD Map Pro — ${proj}`,b:1}],['তারিখ',new Date().toLocaleString('bn-BD')],[],[{v:'সারাংশ',b:1}],B(['প্লট নং/নাম','পয়েন্ট সংখ্যা','সীমানার দৈর্ঘ্য (m)','সীমানার দৈর্ঘ্য (ft)','ক্ষেত্রফল (m²)','ক্ষেত্রফল (ft²)','ক্ষেত্রফল (একর)','ক্ষেত্রফল (শতক)','ক্ষেত্রফল (হেক্টর)'])];
+ let totA=0,totP=0;list.forEach((pl,i)=>{const s=stats[i];totP+=s.perim;if(s.closed)totA+=s.area;rows.push([pl.name,pl.points.length,Number(s.perim.toFixed(3)),Number((s.perim*3.280839895).toFixed(3)),...(s.closed?A(s.area):['এরিয়া হিসাব হয়নি'])])});
+ if(list.length>1)rows.push(B(['মোট',list.reduce((a,p)=>a+p.points.length,0),Number(totP.toFixed(3)),Number((totP*3.280839895).toFixed(3)),...A(totA)]));
+ list.forEach((pl,i)=>{const s=stats[i],pts=pl.points;rows.push([],[{v:`▶ ${pl.name}`,b:1}],B(['পয়েন্ট নং','নাম','Latitude','Longitude','কোঅর্ডিনেট (নির্বাচিত ফরম্যাট)','UTM Zone','UTM Easting','UTM Northing','আগের পয়েন্ট থেকে (m)','আগের পয়েন্ট থেকে (ft)','আগের পয়েন্ট থেকে (link)','মাঝবিন্দু Lat','মাঝবিন্দু Lng','বৃত্তের ব্যাসার্ধ (m)']));
+  pts.forEach((p,j)=>{const u=utm(p),d=j?s.segs[j]:'',mid=j?midpoint(pts[j-1],p):null;rows.push([j+1,p.name||`Point ${j+1}`,p.lat,p.lng,coordText(p),u.zone+u.hemisphere,Number(u.easting.toFixed(2)),Number(u.northing.toFixed(2)),d===''?'':Number(d.toFixed(3)),d===''?'':Number((d*3.280839895).toFixed(3)),d===''?'':Number((d*4.9709695379).toFixed(3)),mid?mid.lat:'',mid?mid.lng:'',p.radius?Number(p.radius.toFixed(3)):''])});
+  if(s.closed)rows.push(['শেষ→প্রথম (বন্ধ করার রেখা)','','','','','','','',Number(s.closing.toFixed(3)),Number((s.closing*3.280839895).toFixed(3)),Number((s.closing*4.9709695379).toFixed(3))])});
+ const png=await renderPlotsPng(list,`${proj} — ${list.map(p=>p.name).join(', ')}`),sheet1=sheetXml(rows)+'</worksheet>';
+ const R='http://schemas.openxmlformats.org/officeDocument/2006/relationships',M='http://schemas.openxmlformats.org/spreadsheetml/2006/main',H='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',ct=x=>`<Override PartName="${x[0]}" ContentType="${x[1]}"/>`,CT='application/vnd.openxmlformats-officedocument.';
+ const dw=1000,dh=Math.round(png.h/png.w*1000),E=9525,files=[
+ {name:'[Content_Types].xml',data:H+'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/>'+[['/xl/workbook.xml',CT+'spreadsheetml.sheet.main+xml'],['/xl/worksheets/sheet1.xml',CT+'spreadsheetml.worksheet+xml'],['/xl/worksheets/sheet2.xml',CT+'spreadsheetml.worksheet+xml'],['/xl/styles.xml',CT+'spreadsheetml.styles+xml'],['/xl/drawings/drawing1.xml',CT+'drawing+xml']].map(ct).join('')+'</Types>'},
+ {name:'_rels/.rels',data:H+`<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${R}/officeDocument" Target="xl/workbook.xml"/></Relationships>`},
+ {name:'xl/workbook.xml',data:H+`<workbook xmlns="${M}" xmlns:r="${R}"><sheets><sheet name="হিসাব" sheetId="1" r:id="rId1"/><sheet name="ম্যাপ" sheetId="2" r:id="rId2"/></sheets></workbook>`},
+ {name:'xl/_rels/workbook.xml.rels',data:H+`<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${R}/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="${R}/worksheet" Target="worksheets/sheet2.xml"/><Relationship Id="rId3" Type="${R}/styles" Target="styles.xml"/></Relationships>`},
+ {name:'xl/styles.xml',data:H+`<styleSheet xmlns="${M}"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`},
+ {name:'xl/worksheets/sheet1.xml',data:sheet1},
+ {name:'xl/worksheets/sheet2.xml',data:sheetXml([[{v:'ম্যাপ — সাদা ব্যাকগ্রাউন্ড (গুগল ম্যাপ ছাড়া); নিচের ছবির ওপর Excel-এর Shapes দিয়ে কাজ করতে পারবেন',b:1}]]).replace('</sheetData>','</sheetData><drawing r:id="rId1"/>')+'</worksheet>'},
+ {name:'xl/worksheets/_rels/sheet2.xml.rels',data:H+`<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${R}/drawing" Target="../drawings/drawing1.xml"/></Relationships>`},
+ {name:'xl/drawings/drawing1.xml',data:H+`<xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><xdr:oneCellAnchor><xdr:from><xdr:col>0</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>1</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from><xdr:ext cx="${dw*E}" cy="${dh*E}"/><xdr:pic><xdr:nvPicPr><xdr:cNvPr id="2" name="Plot Map"/><xdr:cNvPicPr/></xdr:nvPicPr><xdr:blipFill><a:blip xmlns:r="${R}" r:embed="rId1"/><a:stretch><a:fillRect/></a:stretch></xdr:blipFill><xdr:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${dw*E}" cy="${dh*E}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></xdr:spPr></xdr:pic><xdr:clientData/></xdr:oneCellAnchor></xdr:wsDr>`},
+ {name:'xl/drawings/_rels/drawing1.xml.rels',data:H+`<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${R}/image" Target="../media/map.png"/></Relationships>`},
+ {name:'xl/media/map.png',data:png.bytes}];
+ const z=await makeZip(files);return new Uint8Array(await z.arrayBuffer())}
+const safeName=s=>String(s).replace(/[\\/:*?"<>|]+/g,'_').slice(0,90);
+async function exportPlotsExcel(list,fname){try{if(!list.length||!list.some(p=>p.points.length)){$('drawStatus').textContent='Excel করার আগে অন্তত একটি প্লটে পয়েন্ট দিন।';return}list=list.filter(p=>p.points.length);$('drawStatus').textContent='Excel তৈরি হচ্ছে…';const bytes=await buildPlotsXlsx(list);storeExcel(fname,bytes);downloadBlob(new Blob([bytes],{type:XLSX_MIME}),fname);$('drawStatus').textContent=`Excel (${fname}) তৈরি হয়েছে — “হিসাব” শিটে সব হিসাব, “ম্যাপ” শিটে সাদা ব্যাকগ্রাউন্ডে আপনার আঁকা ম্যাপ।`}catch(e){$('drawStatus').textContent='Excel তৈরি করা যায়নি: '+e.message}}
+$('exportExcel').onclick=()=>{commitPlot();const pl=plots[curPlot];exportPlotsExcel([pl],safeName(($('projectName').value.trim()||'প্রজেক্ট')+'_'+pl.name)+'.xlsx')};
+$('exportMulti').onclick=()=>{commitPlot();const box=$('multiPick');if(box.style.display==='block'){box.style.display='none';return}box.innerHTML='<div class="hint"><b>যেসব প্লট একসঙ্গে নেবেন সেগুলো বাছুন</b></div>'+plots.map((p,i)=>{const st=plotStats(p);return `<label class="drow"><span><input type="checkbox" data-mp="${i}"${i===curPlot?' checked':''}> <b>${esc(p.name)}</b><small>${p.points.length}টি পয়েন্ট${st.closed?' · '+areaText(st.area):''}</small></span></label>`}).join('')+'<div class="row"><button id="mpGo" class="primary">⬇ বাছাই করা প্লটের Excel</button></div>';box.style.display='block';$('mpGo').onclick=()=>{const idx=[...box.querySelectorAll('[data-mp]:checked')].map(x=>+x.dataset.mp),list=idx.map(i=>plots[i]);if(!list.length){$('drawStatus').textContent='অন্তত একটি প্লট বাছুন।';return}exportPlotsExcel(list,safeName(($('projectName').value.trim()||'প্রজেক্ট')+'_একত্রে_'+list.map(p=>p.name).join('+'))+'.xlsx')}};
+
 const drawGroup=()=>{if(!map)return null;if(!window._drawGroup)window._drawGroup=L.layerGroup().addTo(map);return window._drawGroup};
 const fmtNum=n=>Number(n).toFixed(7);
 function hav(a,b){return map.distance([a.lat,a.lng],[b.lat,b.lng])}
@@ -753,160 +621,28 @@ function scaleDenom(){const v=$('drawScale').value;return v==='custom'?Math.max(
 function circleRadiusMetres(){const v=Math.max(.001,Number($('circleRadius').value)||1),u=$('circleUnit').value,f={m:1,ft:.3048,in:.0254,cm:.01,km:1000,link:.201168}[u]||1;return v*f*scaleDenom()}
 function polygonAreaM2(points){if(points.length<3)return 0;const lat0=points.reduce((a,p)=>a+p.lat,0)/points.length,xy=points.map(p=>toLocal(p,lat0));let sum=0;for(let i=0;i<xy.length;i++){const a=xy[i],b=xy[(i+1)%xy.length];sum+=a.x*b.y-b.x*a.y}return Math.abs(sum)/2}
 function areaText(m2){const u=$('areaUnit').value,vals={sqm:[m2,'m²'],sqft:[m2*10.7639104167,'ft²'],acre:[m2/4046.8564224,'acre'],hectare:[m2/10000,'ha']},v=vals[u];return `${v[0].toLocaleString('en-IN',{maximumFractionDigits:4})} ${v[1]}`}
-function refreshArea(){const box=$('areaResult');if(!box)return;if(drawPoints.length<3){box.textContent='এরিয়া হিসাবের জন্য অন্তত ৩টি পয়েন্ট দিন।';return}const a=polygonAreaM2(drawPoints);box.textContent=(drawAreaClosed?'সীমানার ক্ষেত্রফল: ':'প্রিভিউ এরিয়া (এরিয়া বোতাম চাপলে সীমানা বন্ধ হবে): ')+`${areaText(a)} · ${a.toFixed(3)} m²`;}
+function refreshArea(){const box=$('areaResult');if(!box)return;if(drawPoints.length<3){box.textContent='এরিয়া হিসাবের জন্য অন্তত ৩টি পয়েন্ট দিন।';return}const a=polygonAreaM2(drawPoints);box.textContent=`সীমানার ক্ষেত্রফল: ${areaText(a)} · ${a.toFixed(3)} m²`;}
 function drawMarker(p,index){const n=index+1,icon=L.divIcon({className:'',html:`<div style="background:#0b65c2;color:white;border:2px solid white;border-radius:50%;width:27px;height:27px;line-height:23px;text-align:center;font-weight:700;font-size:12px;box-shadow:0 1px 5px #0009">${n}</div>`,iconSize:[27,27],iconAnchor:[13,13]});const mk=L.marker([p.lat,p.lng],{icon,draggable:true}).addTo(drawGroup());mk.on('dragend',()=>{const ll=mk.getLatLng();drawPoints[n-1].lat=ll.lat;drawPoints[n-1].lng=ll.lng;renderDrawing()});drawLayers.push(mk)}
-function renderDrawing(){
- if(!map)return;drawGroup().clearLayers();drawLayers=[];
- drawPoints.forEach((p,i)=>drawMarker(p,i));
- // Show every segment's measured distance as a permanent label at the line midpoint.
- for(let i=1;i<drawPoints.length;i++){
-   const a=drawPoints[i-1],b=drawPoints[i],d=hav(a,b),mid=midpoint(a,b);
-   L.polyline([[a.lat,a.lng],[b.lat,b.lng]],{color:'#00a6ff',weight:3,dashArray:'7 5'}).addTo(drawGroup());
-   L.tooltip({permanent:true,direction:'center',className:'measure-label',opacity:1,interactive:false})
-    .setLatLng([mid.lat,mid.lng]).setContent('↔ '+distVal(d)).addTo(drawGroup());
- }
- drawPoints.forEach(p=>{if(p.radius)L.circle([p.lat,p.lng],{radius:p.radius,color:'#e45b20',weight:2,fillOpacity:.05}).addTo(drawGroup())});
- if(drawPoints.length>=3){
-   const coords=drawPoints.map(p=>[p.lat,p.lng]);
-   if(drawAreaClosed)L.polygon(coords,{color:'#16a34a',weight:3,fillColor:'#22c55e',fillOpacity:.16}).addTo(drawGroup());
-   // Area value remains visible over the polygon, including preview before closing.
-   const area=polygonAreaM2(drawPoints),center={lat:drawPoints.reduce((s,p)=>s+p.lat,0)/drawPoints.length,lng:drawPoints.reduce((s,p)=>s+p.lng,0)/drawPoints.length};
-   L.tooltip({permanent:true,direction:'center',className:'measure-label area-measure-label',opacity:1,interactive:false})
-    .setLatLng([center.lat,center.lng]).setContent('▱ '+areaText(area)).addTo(drawGroup());
- }
- $('drawList').innerHTML=drawPoints.map((p,i)=>{const d=i?hav(drawPoints[i-1],p):0;return `<div class="drow"><span><b>${i+1}. ${esc(p.name||'Point '+(i+1))}</b><small>${coordText(p)}</small>${i?`<small>আগের পয়েন্ট থেকে: ${distVal(d)}</small>`:''}</span><button data-dsel="${i}">${drawSelected.includes(i)?'✓':'বাছুন'}</button><button data-ddel="${i}">✕</button></div>`}).join('');
- $('drawList').querySelectorAll('[data-dsel]').forEach(b=>b.onclick=()=>{const i=+b.dataset.dsel;drawSelected=drawSelected.includes(i)?drawSelected.filter(x=>x!==i):[...drawSelected,i].slice(-2);renderDrawing()});
- $('drawList').querySelectorAll('[data-ddel]').forEach(b=>b.onclick=()=>{drawPoints.splice(+b.dataset.ddel,1);drawSelected=[];renderDrawing()});
- $('drawStatus').textContent=`মোট ${drawPoints.length}টি পয়েন্ট · ${Math.max(0,drawPoints.length-1)}টি লাইন সেগমেন্ট`;refreshArea()
-}
+function renderDrawing(){if(!map)return;drawGroup().clearLayers();drawLayers=[];drawPoints.forEach((p,i)=>{drawMarker(p,i);if(i>0)L.polyline([[drawPoints[i-1].lat,drawPoints[i-1].lng],[p.lat,p.lng]],{color:'#00a6ff',weight:3,dashArray:'7 5'}).addTo(drawGroup())});drawPoints.forEach((p,i)=>{if(p.radius)L.circle([p.lat,p.lng],{radius:p.radius,color:'#e45b20',weight:2,fillOpacity:.05}).addTo(drawGroup())});if(drawAreaClosed&&drawPoints.length>=3)L.polygon(drawPoints.map(p=>[p.lat,p.lng]),{color:'#16a34a',weight:3,fillColor:'#22c55e',fillOpacity:.16}).addTo(drawGroup());$('drawList').innerHTML=drawPoints.map((p,i)=>{const d=i?hav(drawPoints[i-1],p):0;return `<div class="drow"><span><b>${i+1}. ${esc(p.name||'Point '+(i+1))}</b><small>${coordText(p)}</small>${i?`<small>আগের পয়েন্ট থেকে: ${distVal(d)}</small>`:''}</span><button data-dsel="${i}">${drawSelected.includes(i)?'✓':'বাছুন'}</button><button data-ddel="${i}">✕</button></div>`}).join('');$('drawList').querySelectorAll('[data-dsel]').forEach(b=>b.onclick=()=>{const i=+b.dataset.dsel;drawSelected=drawSelected.includes(i)?drawSelected.filter(x=>x!==i):[...drawSelected,i].slice(-2);renderDrawing()});$('drawList').querySelectorAll('[data-ddel]').forEach(b=>b.onclick=()=>{drawPoints.splice(+b.dataset.ddel,1);drawSelected=[];renderDrawing()});$('drawStatus').textContent=`মোট ${drawPoints.length}টি পয়েন্ট · ${Math.max(0,drawPoints.length-1)}টি লাইন সেগমেন্ট`;refreshArea();renderPlotBar();clearTimeout(window._pp);window._pp=setTimeout(persistPlots,1500)}
 function addDrawPoint(latlng,name){drawPoints.push({lat:latlng.lat,lng:latlng.lng,name:name||`Point ${drawPoints.length+1}`});renderDrawing()}
 function circleIntersections(a,b,r){const lat0=(a.lat+b.lat)/2,A=toLocal(a,lat0),B=toLocal(b,lat0),dx=B.x-A.x,dy=B.y-A.y,d=Math.hypot(dx,dy);if(d===0||d>2*r||d<1e-6)return[];const x=d/2,h=Math.sqrt(Math.max(0,r*r-x*x)),mx=(A.x+B.x)/2,my=(A.y+B.y)/2,ux=-dy/d,uy=dx/d;return[fromLocal(mx+ux*h,my+uy*h,lat0),fromLocal(mx-ux*h,my-uy*h,lat0)]}
 function midpoint(a,b){const lat=(a.lat+b.lat)/2,dl=((b.lng-a.lng+540)%360)-180;return{lat,lng:((a.lng+dl/2+540)%360)-180}}
-// Drawing uses the original native Leaflet touch/click position. No lifted cursor or finger offset.
-function placeDrawAt(latlng){
-  if(drawMode==='point'||drawMode==='line'){
-    addDrawPoint(latlng);if(drawMode==='point')drawMode='idle';
-  }else if(drawMode==='circle'){
-    const r=circleRadiusMetres();drawPoints.push({lat:latlng.lat,lng:latlng.lng,name:`Point ${drawPoints.length+1}`,radius:r});drawMode='idle';renderDrawing();
-  }
-}
-map.on('click',e=>{
-  if(!$('drawPanel')||$('drawPanel').style.display==='none'||drawMode==='idle')return;
-  placeDrawAt(e.latlng);
-});
-$('openDrawing').onclick=()=>{const box=$('drawPanel');if(box.style.display==='block'){box.style.display='none';drawMode='idle'}else{box.style.display='block';if(box.dataset.minimized==='1'){box.classList.add('minimized');$('drawMin').textContent='▢ খুলুন'}else{$('drawMin').textContent='▁ ছোট'}fitBox(box,'drawing');renderDrawing();renderExcelFiles();setTimeout(()=>map&&map.invalidateSize(),80)}};
-$('drawMin').onclick=()=>{const box=$('drawPanel'),mini=box.classList.toggle('minimized');box.dataset.minimized=mini?'1':'0';$('drawMin').textContent=mini?'▢ খুলুন':'▁ ছোট';if(!mini){box.style.maxHeight=Math.max(160,innerHeight-box.getBoundingClientRect().top-8)+'px';renderDrawing()}};
-$('drawClose').onclick=()=>{$('drawPanel').style.display='none';drawMode='idle'};
-makeDraggable($('drawPanel'),$('drawHead'),'drawing');
-$('drawPoint').onclick=()=>{drawMode='point';$('drawStatus').textContent='ম্যাপে আগের মতো সরাসরি টাচ করে পয়েন্ট বসান।'};
-$('drawLine').onclick=()=>{drawMode='line';$('drawStatus').textContent='ম্যাপে আগের মতো সরাসরি টাচ করে লাইনের পয়েন্ট বসান; শেষ হলে “বন্ধ” চাপুন।'};
+map.on('click',e=>{if(!$('drawPanel')||$('drawPanel').style.display==='none'||drawMode==='idle')return;if(drawMode==='point'||drawMode==='line'){addDrawPoint(e.latlng);if(drawMode==='point')drawMode='idle';}else if(drawMode==='circle'){const r=circleRadiusMetres();drawPoints.push({lat:e.latlng.lat,lng:e.latlng.lng,name:`Point ${drawPoints.length+1}`,radius:r});drawMode='idle';renderDrawing()}});
+$('openDrawing').onclick=()=>{$('drawPanel').style.display=$('drawPanel').style.display==='block'?'none':'block';if($('drawPanel').style.display==='block')renderDrawing()};$('drawClose').onclick=()=>{$('drawPanel').style.display='none';drawMode='idle'};
+$('drawPoint').onclick=()=>{drawMode='point';$('drawStatus').textContent='ম্যাপে যেখানে পয়েন্ট চান সেখানে একবার টাচ করুন।'};
+$('drawLine').onclick=()=>{drawMode='line';$('drawStatus').textContent='ম্যাপে পরপর টাচ করে লাইন/পলিলাইন তৈরি করুন। শেষ হলে “বন্ধ” চাপুন।'};
 $('drawStop').onclick=()=>{drawMode='idle';$('drawStatus').textContent='ড্রয়িং মোড বন্ধ।'};
-$('circleMode').onclick=()=>{drawMode='circle';$('drawStatus').textContent=`ম্যাপে কেন্দ্রবিন্দুতে সরাসরি টাচ করুন; বৃত্তের প্রকৃত ব্যাসার্ধ হবে ${circleRadiusMetres().toFixed(3)} মিটার (স্কেল 1:${scaleDenom()})।`};
+$('circleMode').onclick=()=>{drawMode='circle';$('drawStatus').textContent=`ম্যাপে কেন্দ্রবিন্দুতে টাচ করুন; বৃত্তের প্রকৃত ব্যাসার্ধ হবে ${circleRadiusMetres().toFixed(3)} মিটার (স্কেল 1:${scaleDenom()})।`};
 $('drawScale').onchange=()=>{$('customScaleWrap').style.display=$('drawScale').value==='custom'?'flex':'none';$('drawStatus').textContent=`ড্রয়িং স্কেল 1:${scaleDenom()} নির্বাচন করা হয়েছে। বৃত্তের ব্যাসার্ধ নতুন স্কেল অনুযায়ী গণনা হবে।`};$('customScale').oninput=()=>{};
-$('calcArea').onclick=()=>{if(drawPoints.length<3){$('drawStatus').textContent='এরিয়া বের করতে অন্তত ৩টি সীমানা পয়েন্ট দিন।';return}drawAreaClosed=true;renderDrawing();$('drawStatus').textContent='পয়েন্টগুলো বন্ধ করে জমির ক্ষেত্রফল হিসাব করা হয়েছে।'};$('resetArea').onclick=()=>{drawAreaClosed=false;renderDrawing();$('areaResult').textContent='এরিয়া হিসাব রিসেট হয়েছে।'};$('areaUnit').onchange=renderDrawing;$('distUnit').onchange=renderDrawing;
+$('calcArea').onclick=()=>{if(drawPoints.length<3){$('drawStatus').textContent='এরিয়া বের করতে অন্তত ৩টি সীমানা পয়েন্ট দিন।';return}drawAreaClosed=true;renderDrawing();$('drawStatus').textContent='পয়েন্টগুলো বন্ধ করে জমির ক্ষেত্রফল হিসাব করা হয়েছে।'};$('resetArea').onclick=()=>{drawAreaClosed=false;renderDrawing();$('areaResult').textContent='এরিয়া হিসাব রিসেট হয়েছে।'};$('areaUnit').onchange=refreshArea;
 $('manualAdd').onclick=()=>{const lat=Number($('manualLat').value),lng=Number($('manualLng').value);if(!Number.isFinite(lat)||!Number.isFinite(lng)||Math.abs(lat)>90||Math.abs(lng)>180){$('drawStatus').textContent='Latitude -90 থেকে 90 এবং Longitude -180 থেকে 180-এর মধ্যে দিন।';return}addDrawPoint({lat,lng});map.setView([lat,lng],Math.max(map.getZoom(),17))};
 $('midpointBtn').onclick=()=>{if(drawSelected.length!==2){$('drawStatus').textContent='তালিকা থেকে ঠিক দুটি পয়েন্ট বেছে নিন।';return}const [a,b]=drawSelected.map(i=>drawPoints[i]),m=midpoint(a,b);addDrawPoint(m,'Midpoint');drawSelected=[]};
 $('circleIntersections').onclick=()=>{if(drawSelected.length!==2){$('drawStatus').textContent='দুটি বৃত্তের কেন্দ্র হিসেবে তালিকা থেকে দুটি পয়েন্ট বেছে নিন।';return}const [a,b]=drawSelected.map(i=>drawPoints[i]),r=circleRadiusMetres();a.radius=r;b.radius=r;renderDrawing();const pts=circleIntersections(a,b,r);if(!pts.length){$('drawStatus').textContent='এই ব্যাসার্ধে বৃত্ত দুটির ছেদবিন্দু নেই (কেন্দ্রের দূরত্ব ২×ব্যাসার্ধের বেশি)।';return}pts.forEach((p,i)=>addDrawPoint(p,`Circle intersection ${i+1}`));drawSelected=[]};
-$('undoPoint').onclick=()=>{drawPoints.pop();drawSelected=[];renderDrawing()};$('clearDrawing').onclick=()=>{if(confirm('সব ড্রয়িং পয়েন্ট ও লাইন মুছবেন?')){drawPoints=[];drawSelected=[];renderDrawing()}};
-$('saveDrawing').onclick=async()=>{try{if(!projectId){$('drawStatus').textContent='আগে প্রজেক্ট সেভ করুন বা নতুন প্রজেক্ট তৈরি করুন।';return}const p=await req('readonly',s=>s.get(projectId));if(!p)throw Error('প্রজেক্ট পাওয়া যায়নি');p.drawing=drawPoints;p.drawingAreaClosed=drawAreaClosed;p.updated=Date.now();await req('readwrite',s=>s.put(p));$('drawStatus').textContent='ড্রয়িং পয়েন্ট প্রজেক্টে সেভ হয়েছে।'}catch(e){$('drawStatus').textContent='সেভ হয়নি: '+e.message}};
-async function captureWorkImage(){
- if(typeof html2canvas!=='function')throw Error('ছবি তৈরির লাইব্রেরি লোড হয়নি। ইন্টারনেট সংযোগ পরীক্ষা করুন।');
- const root=document.body;
- const canvas=await html2canvas(root,{backgroundColor:'#ffffff',scale:Math.min(1,1600/Math.max(root.clientWidth,root.clientHeight)),useCORS:true,allowTaint:false,logging:false,
-  ignoreElements:el=>['drawPanel','panel','filesPanel','alignBoard','cleanBar','topBar','upload','badge','tapCatcher'].includes(el.id)});
- return canvas.toDataURL('image/png');
-}
+$('undoPoint').onclick=()=>{drawPoints.pop();drawSelected=[];renderDrawing()};$('clearDrawing').onclick=()=>{if(confirm('এই প্লটের সব পয়েন্ট ও লাইন মুছবেন?')){drawPoints=[];drawSelected=[];renderDrawing()}};
+$('saveDrawing').onclick=async()=>{try{if(!projectId){$('drawStatus').textContent='আগে প্রজেক্ট সেভ করুন বা নতুন প্রজেক্ট তৈরি করুন।';return}const p=await req('readonly',s=>s.get(projectId));if(!p)throw Error('প্রজেক্ট পাওয়া যায়নি');commitPlot();p.plots=plots;p.curPlot=curPlot;p.drawing=drawPoints;p.drawingAreaClosed=drawAreaClosed;p.excelFiles=excelFiles;p.updated=Date.now();await req('readwrite',s=>s.put(p));$('drawStatus').textContent='ড্রয়িং পয়েন্ট প্রজেক্টে সেভ হয়েছে।'}catch(e){$('drawStatus').textContent='সেভ হয়নি: '+e.message}};
 
- async function captureDrawingOnly(){
-  if(!map)throw Error('ম্যাপ প্রস্তুত নয়।');if(!drawPoints.length)throw Error('ড্রয়িং পয়েন্ট নেই।');
-  const pts=drawPoints.map(p=>map.latLngToContainerPoint([p.lat,p.lng])),pad=70;
-  const minX=Math.min(...pts.map(p=>p.x))-pad,minY=Math.min(...pts.map(p=>p.y))-pad,maxX=Math.max(...pts.map(p=>p.x))+pad,maxY=Math.max(...pts.map(p=>p.y))+pad;
-  const scale=Math.min(2,3000/Math.max(maxX-minX,maxY-minY)),c=document.createElement('canvas');
-  c.width=Math.max(320,Math.ceil((maxX-minX)*scale));c.height=Math.max(240,Math.ceil((maxY-minY)*scale));
-  const ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);
-  const xy=pts.map(p=>({x:(p.x-minX)*scale,y:(p.y-minY)*scale}));
-  if(drawAreaClosed&&xy.length>=3){ctx.beginPath();xy.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.fillStyle='rgba(34,197,94,.15)';ctx.fill();ctx.strokeStyle='#16803b';ctx.lineWidth=3*scale;ctx.stroke();}
-  ctx.strokeStyle='#0876c9';ctx.lineWidth=3*scale;ctx.setLineDash([7*scale,5*scale]);
-  for(let i=1;i<xy.length;i++){ctx.beginPath();ctx.moveTo(xy[i-1].x,xy[i-1].y);ctx.lineTo(xy[i].x,xy[i].y);ctx.stroke();}ctx.setLineDash([]);
-  xy.forEach((p,i)=>{ctx.beginPath();ctx.arc(p.x,p.y,13*scale,0,Math.PI*2);ctx.fillStyle='#0b65c2';ctx.fill();ctx.lineWidth=2*scale;ctx.strokeStyle='#fff';ctx.stroke();ctx.fillStyle='#fff';ctx.font=`bold ${13*scale}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(String(i+1),p.x,p.y);});
-  for(let i=1;i<xy.length;i++){const a=xy[i-1],b=xy[i],m={x:(a.x+b.x)/2,y:(a.y+b.y)/2},label=distVal(hav(drawPoints[i-1],drawPoints[i]));ctx.font=`bold ${12*scale}px sans-serif`;const w=ctx.measureText(label).width+14*scale;ctx.fillStyle='#fff';ctx.strokeStyle='#0759a5';ctx.lineWidth=1.5*scale;ctx.beginPath();ctx.roundRect(m.x-w/2,m.y-12*scale,w,24*scale,6*scale);ctx.fill();ctx.stroke();ctx.fillStyle='#08345b';ctx.fillText(label,m.x,m.y);}
-  if(drawAreaClosed&&drawPoints.length>=3){const label=areaText(polygonAreaM2(drawPoints)),cx=xy.reduce((a,p)=>a+p.x,0)/xy.length,cy=xy.reduce((a,p)=>a+p.y,0)/xy.length;ctx.font=`bold ${14*scale}px sans-serif`;const w=ctx.measureText(label).width+18*scale;ctx.fillStyle='#e2ffe6';ctx.strokeStyle='#16803b';ctx.lineWidth=2*scale;ctx.beginPath();ctx.roundRect(cx-w/2,cy-16*scale,w,32*scale,7*scale);ctx.fill();ctx.stroke();ctx.fillStyle='#075b26';ctx.fillText(label,cx,cy);}
-  return c.toDataURL('image/png');
- }
 
- function downloadDataUrl(dataUrl,filename){
- const a=document.createElement('a');a.href=dataUrl;a.download=filename;document.body.appendChild(a);a.click();a.remove();
-}
-$('exportMapImage').onclick=async()=>{
- try{$('drawStatus').textContent='কাজের ম্যাপের ছবি তৈরি হচ্ছে…';const data=await captureWorkImage();const name=(($('projectName').value||'Survey').replace(/[^\p{L}\p{N}_-]+/gu,'_')||'Survey')+'_Map.png';downloadDataUrl(data,name);$('drawStatus').textContent='বর্তমান কাজের ম্যাপ PNG ছবি হিসেবে ডাউনলোড হয়েছে।'}
- catch(e){$('drawStatus').textContent='ছবি তৈরি করা যায়নি: '+e.message}
-};
-function renderExcelFiles(){
- const box=$('excelFileList');if(!box)return;
- const activeId=projectId;if(!activeId||!db){box.textContent='প্রথমে প্রজেক্ট সেভ করুন।';return}
- req('readonly',st=>st.get(activeId)).then(p=>{
-  if(activeId!==projectId)return;
-  const files=Array.isArray(p?.excelFiles)?p.excelFiles:[];
-  if(!files.length){box.innerHTML='এখনও কোনো Excel ফাইল সেভ করা হয়নি। প্রথমে “Excel + ম্যাপ ছবি” চাপুন।';return}
-  box.innerHTML=files.slice().sort((a,b)=>a.serial-b.serial).map(f=>`<div class="drow"><span><b>Excel-${String(f.serial).padStart(3,'0')} — ${esc(f.name)}</b><small>${esc(f.createdLabel||'')} · ${Number(f.pointCount)||0}টি পয়েন্ট</small></span><button data-xld="${esc(f.id)}">⬇</button><button data-xdel="${esc(f.id)}">✕</button></div>`).join('');
-  box.querySelectorAll('[data-xld]').forEach(b=>b.onclick=async()=>{const x=files.find(v=>v.id===b.dataset.xld);if(!x?.blob)return;downloadBlob(x.blob,x.fileName||`Survey_${String(x.serial).padStart(3,'0')}.xlsx`)});
-  box.querySelectorAll('[data-xdel]').forEach(b=>b.onclick=async()=>{if(!confirm('এই Excel ফাইলটি সেভ তালিকা থেকে মুছবেন?'))return;const fresh=await req('readonly',st=>st.get(activeId));if(activeId!==projectId)return;fresh.excelFiles=(fresh.excelFiles||[]).filter(x=>x.id!==b.dataset.xdel);fresh.updated=Date.now();await req('readwrite',st=>st.put(fresh));renderExcelFiles()});
- }).catch(e=>box.textContent='Excel তালিকা পড়া যায়নি: '+e.message);
-}
-$('refreshExcelFiles').onclick=renderExcelFiles;
-$('exportExcel').onclick=async()=>{
-  const btn=$('exportExcel');btn.disabled=true;
-  try{
-   if(!drawPoints.length)throw Error('Excel করার আগে পয়েন্ট/ড্রয়িং দিন।');
-   if(typeof ExcelJS==='undefined')throw Error('Excel লাইব্রেরি লোড হয়নি। ইন্টারনেট চালু রেখে পেজ রিফ্রেশ করুন।');
-   $('drawStatus').textContent='কোঅর্ডিনেট, মাপ ও শুধু ড্রয়িংয়ের ছবি দিয়ে Excel তৈরি হচ্ছে…';
-   const wb=new ExcelJS.Workbook();wb.creator='Bangla CAD Map Pro';wb.subject='Survey coordinates and measurements';wb.created=new Date();
-   if(!projectId)throw Error('আগে “নতুন প্রজেক্ট” তৈরি করুন অথবা সেভ করা প্রজেক্ট খুলুন।');
-   const existing=await req('readonly',st=>st.get(projectId));
-   if(!existing)throw Error('বর্তমান প্রজেক্টের সেভ রেকর্ড পাওয়া যায়নি। আগে প্রজেক্ট সেভ করুন।');
-   const projectName=existing.name||$('projectName').value.trim()||'Survey';
-   const projectNo=String(existing.projectNumber||'').trim();
-   if(!projectNo)throw Error('এই প্রজেক্টে নম্বর নেই। প্রজেক্ট নম্বর দিয়ে সেভ করুন।');
-   $('projectName').value=projectName;setProjectNumber(projectNo);updateActiveProjectBadge();
-   const savedFiles=Array.isArray(existing?.excelFiles)?existing.excelFiles:[];
-   const serial=savedFiles.reduce((m,x)=>Math.max(m,Number(x.serial)||0),0)+1;
-   const base=projectName.replace(/[^\p{L}\p{N}_-]+/gu,'_')||'Survey';
-   const fileName=`Project_${projectNo.padStart(3,'0')}_Excel_${String(serial).padStart(3,'0')}_${base}.xlsx`;
-
-   // Sheet 1: complete coordinate list.
-   const coord=wb.addWorksheet('Coordinates',{views:[{state:'frozen',ySplit:5}]});
-   coord.columns=[{width:12},{width:25},{width:22},{width:22},{width:22},{width:38},{width:18}];
-   coord.mergeCells('A1:G1');coord.getCell('A1').value='BANGLA CAD MAP PRO — সম্পূর্ণ কোঅর্ডিনেট তালিকা';coord.getCell('A1').font={bold:true,size:16,color:{argb:'FF17365D'}};
-   coord.mergeCells('A2:G2');coord.getCell('A2').value=`প্রজেক্ট নং: ${projectNo} | প্রজেক্ট: ${projectName} | ${new Date().toLocaleString('bn-IN')}`;
-   coord.mergeCells('A3:G3');coord.getCell('A3').value='এই শিটে ড্রয়িংয়ের সব পয়েন্টের WGS84 Latitude ও Longitude রয়েছে।';
-   const ch=['Point No','Point Name','Latitude (WGS84)','Longitude (WGS84)','Coordinate Format','Formatted Coordinate','Radius (m)'];
-   ch.forEach((h,i)=>coord.getCell(5,i+1).value=h);const chr=coord.getRow(5);chr.font={bold:true,color:{argb:'FFFFFFFF'}};chr.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF1769AA'}};chr.alignment={wrapText:true};chr.height=34;
-   drawPoints.forEach((p,i)=>{const row=coord.addRow([i+1,p.name||`Point ${i+1}`,p.lat,p.lng,$('coordFormat').selectedOptions[0].text,coordText(p),p.radius||'']);row.eachCell(c=>{c.alignment={vertical:'middle',wrapText:true};if(typeof c.value==='number')c.numFmt='0.00000000';});});
-   coord.autoFilter={from:{row:5,column:1},to:{row:Math.max(5,5+drawPoints.length),column:7}};coord.pageSetup={orientation:'landscape',fitToPage:true,fitToWidth:1,fitToHeight:0};
-
-   // Sheet 2: dimensions plus a cropped drawing-only illustration.
-   const ms=wb.addWorksheet('Measurements & Image');ms.columns=[{width:24},{width:24},{width:24},{width:22},{width:25},{width:22},{width:22}];
-   ms.mergeCells('A1:G1');ms.getCell('A1').value='জমির মাপ ও ড্রয়িং ছবি';ms.getCell('A1').font={bold:true,size:16,color:{argb:'FF17365D'}};
-   ms.mergeCells('A2:G2');ms.getCell('A2').value=`প্রজেক্ট নং: ${projectNo} | ${projectName}`;
-   const mhdr=['লাইন নং','শুরু পয়েন্ট','শেষ পয়েন্ট','দূরত্ব (মিটার)','দূরত্ব (নির্বাচিত একক)','মাঝ Latitude','মাঝ Longitude'];mhdr.forEach((h,i)=>ms.getCell(4,i+1).value=h);
-   const mh=ms.getRow(4);mh.font={bold:true,color:{argb:'FFFFFFFF'}};mh.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF39845A'}};mh.alignment={wrapText:true};mh.height=34;
-   for(let i=1;i<drawPoints.length;i++){const a=drawPoints[i-1],b=drawPoints[i],d=hav(a,b),m=midpoint(a,b);ms.addRow([i,a.name||`Point ${i}`,b.name||`Point ${i+1}`,Number(d.toFixed(3)),distVal(d),m.lat,m.lng]);}
-   let r=6+Math.max(0,drawPoints.length-1)+1;ms.getCell(`A${r}`).value='ক্ষেত্রফল / সারাংশ';ms.getCell(`A${r}`).font={bold:true,size:13,color:{argb:'FF17365D'}};
-   [['সীমানা বন্ধ',drawAreaClosed?'হ্যাঁ':'না'],['ক্ষেত্রফল (বর্গমিটার)',drawAreaClosed?Number(polygonAreaM2(drawPoints).toFixed(3)):'' ],['ক্ষেত্রফল (নির্বাচিত একক)',drawAreaClosed?areaText(polygonAreaM2(drawPoints)):'' ],['ড্রয়িং স্কেল',`1:${scaleDenom()}`],['পয়েন্ট সংখ্যা',drawPoints.length],['লাইন সেগমেন্ট',Math.max(0,drawPoints.length-1)]].forEach((v,i)=>{ms.getCell(`A${r+1+i}`).value=v[0];ms.getCell(`B${r+1+i}`).value=v[1];ms.getCell(`A${r+1+i}`).font={bold:true};});
-   const imageRow=r+9;ms.mergeCells(`A${imageRow}:G${imageRow}`);ms.getCell(`A${imageRow}`).value='শুধু আপনার আঁকা ড্রয়িং — পয়েন্ট, লাইন, দূরত্ব ও ক্ষেত্রফল';ms.getCell(`A${imageRow}`).font={bold:true,size:13,color:{argb:'FF17365D'}};
-   const imageData=await captureDrawingOnly(),imageId=wb.addImage({base64:imageData.split(',')[1],extension:'png'});ms.addImage(imageId,{tl:{col:0,row:imageRow},ext:{width:760,height:520},editAs:'oneCell'});
-   ms.pageSetup={orientation:'landscape',fitToPage:true,fitToWidth:1,fitToHeight:0};
-
-   const buf=await wb.xlsx.writeBuffer(),blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-   const projectRecord={...(existing||{}),id:projectId,name:projectName,projectNumber:projectNo,folderName:$('projectFolderSelect')?.value||existing?.folderName||'',updated:Date.now(),maps:maps.map(m=>{const c={...m};delete c.undoStack;return c;}),drawing:drawPoints,drawingAreaClosed:drawAreaClosed,excelFiles:savedFiles};
-   projectRecord.excelFiles.push({id:uid(),serial,name:`${base} — হিসাব ${serial}`,fileName,created:Date.now(),createdLabel:new Date().toLocaleString('bn-IN'),pointCount:drawPoints.length,blob});
-   await req('readwrite',st=>st.put(projectRecord));await refreshProjects();renderExcelFiles();
-   const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=fileName;a.style.display='none';a.rel='noopener';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),180000);
-   $('drawStatus').textContent=`প্রজেক্ট নং ${projectNo} · Excel-${String(serial).padStart(3,'0')} তৈরি ও তালিকায় সেভ হয়েছে। ডাউনলোড শুরু হয়েছে। ১ম শিটে সব কোঅর্ডিনেট, ২য় শিটে মাপ এবং শুধু আঁকা ড্রয়িংয়ের ছবি আছে।`;
-  }catch(e){$('drawStatus').textContent='Excel তৈরি/ডাউনলোড করা যায়নি: '+(e&&e.message?e.message:String(e));}
-  finally{btn.disabled=false;}
- };
- // প্রথমে কাজের ম্যাপের জন্য বড় জায়গা রাখুন; কন্ট্রোল দরকার হলে নিচের বোতামে খুলুন।
-updateActiveProjectBadge();$('panel').classList.add('collapsed');$('panelToggle').textContent='☰ কন্ট্রোল খুলুন';
+// প্রথমে কাজের ম্যাপের জন্য বড় জায়গা রাখুন; কন্ট্রোল দরকার হলে নিচের বোতামে খুলুন।
+$('panel').classList.add('collapsed');$('panelToggle').textContent='☰ কন্ট্রোল খুলুন';
 })();
 </script></body></html>
