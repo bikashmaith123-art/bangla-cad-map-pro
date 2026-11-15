@@ -30,7 +30,7 @@
 <div class="row"><label>দেখানোর কোঅর্ডিনেট <select id="coordFormat"><option value="decimal">WGS84 Decimal</option><option value="dms">WGS84 DMS</option><option value="utm">UTM (WGS84)</option></select></label><label>দূরত্ব <select id="distUnit"><option value="m">মিটার</option><option value="ft">ফুট</option><option value="km">কিমি</option><option value="link">লিংক</option></select></label><label>লেখার আকার <input id="labelScale" type="range" min="10" max="40" value="17" style="width:90px;vertical-align:middle"> <b id="labelScaleVal">17</b></label><label>পয়েন্টের আকার <input id="ptScale" type="range" min="12" max="90" value="27" style="width:90px;vertical-align:middle"> <b id="ptScaleVal">27</b></label><label><input type="checkbox" id="showPtCoord"> প্রতিটি পয়েন্টের কোঅর্ডিনেট দেখান</label></div>
 <div class="row"><label>বৃত্তের ব্যাসার্ধ <input id="circleRadius" type="number" min="0.001" step="any" value="100" style="width:76px"></label><label>একক <select id="circleUnit"><option value="m">মিটার</option><option value="ft">ফুট</option><option value="in">ইঞ্চি</option><option value="cm">সেন্টিমিটার</option><option value="km">কিলোমিটার</option><option value="link">লিংক</option></select></label></div>
 <div class="row"><label>ড্রয়িং স্কেল <select id="drawScale"><option value="1">বাস্তব মাপ (1:1)</option><option value="100">1:100</option><option value="200">1:200</option><option value="500">1:500</option><option value="1000">1:1,000</option><option value="2000">1:2,000</option><option value="5000">1:5,000</option><option value="10000">1:10,000</option><option value="custom">কাস্টম</option></select></label><label id="customScaleWrap" style="display:none">1 : <input id="customScale" type="number" min="1" step="1" value="1000" style="width:75px"></label></div>
-<div class="row"><button id="circleMode">⭕ পয়েন্টে বৃত্ত</button><button id="circleIntersections">✳ দুই বৃত্তের ছেদবিন্দু</button><button id="circleDel">🗑 বৃত্ত মুছুন</button></div>\n<div class="row"><button id="textMode">🔤 লেখা যোগ করুন</button><label>লেখার সাইজ <input id="txtScale" type="range" min="10" max="60" value="18" style="width:90px;vertical-align:middle"> <b id="txtScaleVal">18</b></label></div>
+<div class="row"><button id="circleMode">⭕ পয়েন্টে বৃত্ত</button><button id="circleIntersections">✳ দুই বৃত্তের ছেদবিন্দু</button><button id="circleDel">🗑 বৃত্ত মুছুন</button></div>\n<div class="row"><button id="textMode">🔤 লেখা যোগ করুন</button><label>লেখার সাইজ <input id="txtScale" type="range" min="10" max="60" value="18" style="width:90px;vertical-align:middle"> <b id="txtScaleVal">18</b></label><label>ফন্ট <select id="txtFont"><option value="sans">ডিফল্ট (সানস)</option><option value="serif">সেরিফ (বইয়ের মতো)</option><option value="mono">সমান চওড়া (মনো)</option><option value="arial">Arial</option></select></label><label><input type="checkbox" id="txtBold" checked> বোল্ড</label><label>রং <input type="color" id="txtColor" value="#111111" style="width:36px;height:26px;vertical-align:middle;padding:0"></label></div>
 <div class="row"><label>এরিয়ার একক <select id="areaUnit"><option value="sqm">বর্গমিটার</option><option value="sqft">বর্গফুট</option><option value="acre">একর</option><option value="hectare">হেক্টর</option></select></label><button id="calcArea" class="primary">▱ নির্বাচিত পয়েন্টের এরিয়া</button><button id="resetArea">এরিয়া রিসেট</button></div><div id="areaResult" class="hint">এরিয়া হিসাবের জন্য অন্তত ৩টি পয়েন্ট দিন। পয়েন্টগুলো ধারাবাহিক সীমানা তৈরি করবে।</div>
 <div class="row"><button id="midpointBtn">↔ নির্বাচিত দুই পয়েন্টের মাঝখান</button><button id="undoPoint">↶ শেষ পয়েন্ট মুছুন</button><button id="clearDrawing">🗑 ড্রয়িং মুছুন</button></div>
 <div class="row"><button id="exportExcel" class="primary">📊 এই প্লটের Excel</button><button id="exportMulti">📚 অন করা প্লটগুলোর Excel</button><button id="exportCad">📐 এই প্লটের CAD</button><button id="exportCadMulti">📚 অন প্লটগুলোর CAD</button><button id="saveDrawing">💾 প্রজেক্টে ড্রয়িং সেভ</button></div>
@@ -581,7 +581,7 @@ async function renderPlotsPng(list,title,opts={}){
   pts.forEach((p,i)=>{const[x,y]=P(p);g.beginPath();g.arc(x,y,13,0,7);g.fillStyle=col;g.fill();g.lineWidth=2;g.strokeStyle='#fff';g.stroke();g.fillStyle='#fff';g.font='bold 13px '+F;g.textAlign='center';g.textBaseline='middle';g.fillText(String(i+1),x,y+1)});
   const cx=pts.reduce((a,p)=>a+P(p)[0],0)/pts.length,cy=pts.reduce((a,p)=>a+P(p)[1],0)/pts.length;halo(pl.name,cx,cy-(st.closed?12:26),'bold 22px '+F,col);if(st.closed)halo(areaText(st.area),cx,cy+14,'17px '+F,'#111')});
  // ব্যবহারকারীর নিজের লেখা (নোট)
- list.forEach(pl=>(pl.texts||[]).forEach(t=>{const[x,y]=P(t),lines=String(t.text).split('\n'),fs=20,lh=fs*1.35;g.font='bold '+fs+'px '+F;const w=Math.max(...lines.map(l=>g.measureText(l).width))+16,hh=lines.length*lh+8;g.fillStyle='#fffffff0';g.fillRect(x-w/2,y-hh/2,w,hh);g.lineWidth=2;g.strokeStyle='#7e22ce';g.strokeRect(x-w/2,y-hh/2,w,hh);g.fillStyle='#111';g.textAlign='center';g.textBaseline='middle';lines.forEach((l,i)=>g.fillText(l,x,y-hh/2+4+lh*(i+.5)))}));
+ list.forEach(pl=>(pl.texts||[]).forEach(t=>{const[x,y]=P(t),lines=String(t.text).split('\n'),fs=20,lh=fs*1.35;g.font=(txtBold()?'bold ':'')+fs+'px '+txtFamily();g.textAlign='left';g.textBaseline='middle';g.lineJoin='round';lines.forEach((l,i)=>{const yy=y+lh*i;g.lineWidth=4;g.strokeStyle='#fff';g.strokeText(l,x,yy);g.fillStyle=txtColor();g.fillText(l,x,yy)})}));
  if(!opts.imageOnly){halo(title,W/2,32,'bold 24px '+F,'#111');
   const nl=niceLen(220/k),bx=M/2+20,by=H-40;g.strokeStyle='#111';g.lineWidth=3;g.beginPath();g.moveTo(bx,by);g.lineTo(bx+nl*k,by);g.moveTo(bx,by-7);g.lineTo(bx,by+7);g.moveTo(bx+nl*k,by-7);g.lineTo(bx+nl*k,by+7);g.stroke();halo(nl>=1000?nl/1000+' km':nl+' m',bx+nl*k/2,by-18,'15px '+F,'#111');
   g.fillStyle='#111';g.beginPath();g.moveTo(W-60,50);g.lineTo(W-72,90);g.lineTo(W-60,82);g.lineTo(W-48,90);g.closePath();g.fill();halo('N',W-60,106,'bold 18px '+F,'#111')}
@@ -662,8 +662,8 @@ function cadDxfText(list,images){
  const all=list.flatMap(p=>p.points||[]),lat0=all.reduce((a,p)=>a+p.lat,0)/Math.max(1,all.length),xy=p=>toLocal(p,lat0);
  let minX=1e18,maxX=-1e18,minY=1e18,maxY=-1e18;all.forEach(p=>{const q=xy(p);minX=Math.min(minX,q.x);maxX=Math.max(maxX,q.x);minY=Math.min(minY,q.y);maxY=Math.max(maxY,q.y)});
  const span=Math.max(maxX-minX,maxY-minY,1),th=Math.max(span/100,0.8),off=th*.65;
- const textEntity=(txt,x,y,height,layer,angle=0,style='STANDARD')=>{add(0,'TEXT');add(5,h());add(330,'10');add(100,'AcDbEntity');add(8,layer);add(100,'AcDbText');add(10,x);add(20,y);add(30,0);add(40,height);add(1,bn(txt));add(50,angle);add(7,style);add(72,1);add(11,x);add(21,y);add(31,0);add(100,'AcDbText');add(73,0)};
- list.forEach(pl=>(pl.texts||[]).forEach(t=>{const q=xy(t);String(t.text).split('\n').forEach((ln,k)=>{if(ln.trim())textEntity(ln,q.x,q.y-k*th*1.5,th*1.2,'NOTES',0,'BANGLA')})}));
+ const textEntity=(txt,x,y,height,layer,angle=0,style='STANDARD',center=true)=>{add(0,'TEXT');add(5,h());add(330,'10');add(100,'AcDbEntity');add(8,layer);add(100,'AcDbText');add(10,x);add(20,y);add(30,0);add(40,height);add(1,bn(txt));add(50,angle);add(7,style);add(72,center?1:0);if(center){add(11,x);add(21,y);add(31,0)}add(100,'AcDbText');add(73,0)};
+ list.forEach(pl=>(pl.texts||[]).forEach(t=>{const q=xy(t);String(t.text).split('\n').forEach((ln,k)=>{if(ln.trim())textEntity(ln,q.x,q.y-k*th*1.5,th*1.2,'NOTES',0,'BANGLA',false)})}));
  list.forEach(pl=>{const pts=pl.points||[];if(!pts.length)return;const st=plotStats(pl),coords=pts.map(xy);
   if(pts.length>1){add(0,'LWPOLYLINE');add(5,h());add(330,'10');add(100,'AcDbEntity');add(8,'BOUNDARY');add(100,'AcDbPolyline');add(90,pts.length);add(70,st.closed?1:0);coords.forEach(q=>{add(10,q.x);add(20,q.y)})}
   coords.forEach((q,i)=>{add(0,'POINT');add(5,h());add(330,'10');add(100,'AcDbEntity');add(8,'POINTS');add(100,'AcDbPoint');add(10,q.x);add(20,q.y);add(30,0);textEntity(String(i+1),q.x+off,q.y+off,th*.8,'POINTS')});
@@ -796,6 +796,10 @@ map.on('click',e=>{if(Date.now()<(window._noClickUntil||0))return;if(!$('drawPan
 })();
 
 /* ---- ম্যাপে যেকোনো জায়গায় নিজের লেখা (বাংলা/ইংরেজি) বসানো ---- */
+const TXT_FONTS={sans:"'Noto Sans Bengali','Nirmala UI','Hind Siliguri',system-ui,sans-serif",serif:"'Noto Serif Bengali','Kalpurush','Vrinda','Times New Roman',serif",mono:"'Noto Sans Mono','Courier New',monospace",arial:"Arial,'Noto Sans Bengali',sans-serif"};
+function txtFamily(){const e=document.getElementById('txtFont');return TXT_FONTS[(e&&e.value)||'sans']||TXT_FONTS.sans}
+function txtBold(){const e=document.getElementById('txtBold');return !e||e.checked}
+function txtColor(){const e=document.getElementById('txtColor');return(e&&e.value)||'#111111'}
 function txtPx(){const e=document.getElementById('txtScale');return(e&&+e.value)||18}
 function noteDialog(init,title,cb){
  const ov=document.createElement('div');ov.style.cssText='position:fixed;inset:0;background:#0008;z-index:99999;display:flex;align-items:center;justify-content:center;padding:14px';
@@ -820,11 +824,16 @@ function editNote(i){
 function renderNotes(){
  const pl=plots[curPlot];if(!pl||pl.visible===false||!map)return;
  (pl.texts||[]).forEach((t,i)=>{const fs=txtPx();
-  const mk=L.marker([t.lat,t.lng],{draggable:true,icon:L.divIcon({className:'',iconSize:[0,0],html:`<div style="position:absolute;transform:translate(-50%,-50%);white-space:pre;text-align:center;background:#fffffff0;color:#111;border:1.5px solid #7e22ce;border-radius:7px;padding:2px 7px;font:700 ${fs}px/1.3 system-ui,sans-serif;box-shadow:0 1px 4px #0006">${esc(t.text)}</div>`})}).addTo(drawGroup());
+  const mk=L.marker([t.lat,t.lng],{draggable:true,icon:L.divIcon({className:'',iconSize:[0,0],html:`<div style="position:absolute;transform:translate(-6px,calc(-0.7em - 4px));white-space:pre;text-align:left;padding:4px 6px;color:${txtColor()};font:${txtBold()?'700':'400'} ${fs}px/1.3 ${txtFamily()};text-shadow:-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff,1px 1px 0 #fff,0 0 4px #fff">${esc(t.text)}</div>`})}).addTo(drawGroup());
   mk.on('dragend',()=>{const ll=mk.getLatLng();t.lat=ll.lat;t.lng=ll.lng;persistPlots()});
   mk.on('click',()=>editNote(i));
  });
 }
+(function(){const f=document.getElementById('txtFont'),b=document.getElementById('txtBold'),c=document.getElementById('txtColor');if(!f)return;
+ try{const a=localStorage.getItem('txtFont'),d=localStorage.getItem('txtBold'),e=localStorage.getItem('txtColor');if(a)f.value=a;if(d!==null)b.checked=d==='1';if(e)c.value=e}catch(_){}
+ const sv=()=>{try{localStorage.setItem('txtFont',f.value);localStorage.setItem('txtBold',b.checked?'1':'0');localStorage.setItem('txtColor',c.value)}catch(_){}renderDrawing()};
+ f.addEventListener('change',sv);b.addEventListener('change',sv);c.addEventListener('input',sv);
+})();
 $('textMode').onclick=()=>{drawMode='text';$('drawStatus').textContent='ম্যাপে যেখানে লিখতে চান সেখানে একবার টাচ করুন, তারপর লেখা টাইপ করুন।'};
 (function(){const e=document.getElementById('txtScale'),v=document.getElementById('txtScaleVal');if(!e)return;
  try{const x=localStorage.getItem('txtScale');if(x){e.value=x}}catch(_){}
