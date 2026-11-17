@@ -233,44 +233,7 @@ function render(){ctx.clearRect(0,0,canvas.width,canvas.height);shapes.forEach(s
 function drawShape(s){ctx.save();ctx.strokeStyle='#183e61';ctx.fillStyle='#183e61';ctx.lineWidth=3;ctx.beginPath();if(s.type==='line'){ctx.moveTo(s.x1,s.y1);ctx.lineTo(s.x2,s.y2);ctx.stroke()}else if(s.type==='rect'){ctx.strokeRect(s.x1,s.y1,s.x2-s.x1,s.y2-s.y1)}else if(s.type==='circle'){ctx.arc(s.x1,s.y1,Math.hypot(s.x2-s.x1,s.y2-s.y1),0,Math.PI*2);ctx.stroke()}else if(s.type==='text'){ctx.font='28px sans-serif';ctx.fillText(s.text,s.x1,s.y1)}ctx.restore()}
 canvas.addEventListener('pointerdown',e=>{let p=pos(e);if(tool==='text'){let t=prompt('যে লেখা বসাতে চান লিখুন:');if(t){shapes.push({type:'text',x1:p.x,y1:p.y,text:t});render()}return}start=p;canvas.setPointerCapture(e.pointerId)});
 canvas.addEventListener('pointermove',e=>{if(!start)return;let p=pos(e);preview={type:tool,x1:start.x,y1:start.y,x2:p.x,y2:p.y};render()});
-canvas.addEventListener('pointerup',e=>{if(!start)return;let p=pos(e);shapes.push({type:tool,x1:start.x,y1:start.y,x2:p.x,y2:p.y});start=null;preview=null;
-let surveyPoints=[],surveyLines=[],plotClosed=false;
-function escHTML(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function nextPointId(){return 'P-'+String(surveyPoints.length+1).padStart(2,'0')}
-function addSurveyPoint(lat,lon,type,accuracy='',desc=''){
- const id=nextPointId();surveyPoints.push({id,type,lat:Number(lat),lon:Number(lon),easting:'',northing:'',accuracy:accuracy||'',time:new Date().toLocaleString(),desc});renderSurveyTables();
-}
-function gpsFailureMessage(err){
- if(!window.isSecureContext || !/^https:/i.test(location.protocol)) return 'GPS চালু হয়নি: ফাইলটি content:// বা file:// থেকে খোলা হয়েছে। Android Chrome-এ HTTPS ওয়েবসাইট (GitHub Pages) থেকে সফটওয়্যারটি খুলুন; ডাউনলোড করা HTML ফাইল থেকে Live GPS কাজ করবে না।';
- if(err && err.code===1) return 'GPS অনুমতি বন্ধ আছে। Android Settings → Apps → Chrome → Permissions → Location → Allow দিন; তারপর পেজ রিফ্রেশ করুন।';
- if(err && err.code===2) return 'GPS অবস্থান পাওয়া যাচ্ছে না। ডিভাইসের Location চালু করুন, বাইরে/খোলা জায়গায় গিয়ে আবার চেষ্টা করুন।';
- if(err && err.code===3) return 'GPS পেতে সময় শেষ হয়েছে। Location চালু রেখে ১০–২০ সেকেন্ড অপেক্ষা করে আবার চেষ্টা করুন।';
- return 'GPS পাওয়া যায়নি: '+(err&&err.message?err.message:'অজানা সমস্যা')+'। Location চালু আছে কি না পরীক্ষা করুন।';
-}
-function requestDeviceGPS(onSuccess,onFailure){
- if(!window.isSecureContext || !/^https:/i.test(location.protocol)){onFailure({code:0});return;}
- if(!navigator.geolocation){onFailure({code:0,message:'এই ব্রাউজারে Geolocation নেই'});return;}
- navigator.geolocation.getCurrentPosition(onSuccess,onFailure,{enableHighAccuracy:true,timeout:30000,maximumAge:0});
-}
-function captureGPS(){
- const status=document.getElementById('gpsStatus');status.textContent='GPS অবস্থান খোঁজা হচ্ছে… Location চালু রাখুন এবং ১০–২০ সেকেন্ড অপেক্ষা করুন।';
- requestDeviceGPS(pos=>{
-  const lat=pos.coords.latitude,lon=pos.coords.longitude,acc=pos.coords.accuracy;
-  addSurveyPoint(lat,lon,'Live GPS Point',acc,document.getElementById('gpsDesc').value);
-  status.textContent='GPS পয়েন্ট যোগ হয়েছে। Latitude: '+lat.toFixed(7)+' | Longitude: '+lon.toFixed(7)+' | Accuracy: প্রায় '+Math.round(acc)+' মিটার।';
- },err=>{status.textContent=gpsFailureMessage(err);});
-}
-function addManualPoint(){let a=document.getElementById('manualLat').value,b=document.getElementById('manualLon').value;if(a===''||b===''){alert('দুটি Coordinate লিখুন।');return;}addSurveyPoint(a,b,document.getElementById('pointType').value,'',document.getElementById('gpsDesc').value);document.getElementById('manualLat').value='';document.getElementById('manualLon').value='';}
-function renderSurveyTables(){let rows=surveyPoints.map((p,i)=>`<tr><td>${p.id}</td><td>${escHTML(p.type)}</td><td>${p.lat}</td><td>${p.lon}</td><td>${p.easting}</td><td>${p.northing}</td><td>${p.accuracy?Number(p.accuracy).toFixed(1)+' m':''}</td><td>${escHTML(p.time)}</td><td>${escHTML(p.desc)}</td><td><button class="secondary" onclick="removeSurveyPoint(${i})">মুছুন</button></td></tr>`).join('');document.getElementById('pointRows').innerHTML=rows;let opts=surveyPoints.map((p,i)=>`<option value="${i}">${p.id}</option>`).join('');document.getElementById('fromPoint').innerHTML=opts;document.getElementById('toPoint').innerHTML=opts;renderLineRows();}
-function removeSurveyPoint(i){surveyPoints.splice(i,1);surveyPoints.forEach((p,j)=>p.id='P-'+String(j+1).padStart(2,'0'));surveyLines=[];renderSurveyTables();}
-function deleteLastPoint(){if(surveyPoints.length)removeSurveyPoint(surveyPoints.length-1)}function clearSurveyPoints(){if(confirm('সব পয়েন্ট মুছবেন?')){surveyPoints=[];surveyLines=[];renderSurveyTables();document.getElementById('measureStatus').textContent='সব পয়েন্ট মুছে ফেলা হয়েছে।'}}
-function distanceBetween(a,b){let dx=b.lon-a.lon,dy=b.lat-a.lat;return Math.hypot(dx,dy)}
-function connectPoints(){let a=+document.getElementById('fromPoint').value,b=+document.getElementById('toPoint').value;if(!surveyPoints[a]||!surveyPoints[b]||a===b){alert('দুটি আলাদা পয়েন্ট নির্বাচন করুন।');return;}let p=surveyPoints[a],q=surveyPoints[b],d=distanceBetween(p,q);surveyLines.push({from:p.id,to:q.id,distance:d,unit:'Coordinate unit'});renderLineRows();document.getElementById('measureStatus').textContent='সংযোগ তৈরি হয়েছে। স্থানাঙ্কের ভিত্তিতে দূরত্ব: '+d.toFixed(6)+' (CRS/scale যাচাই না করা পর্যন্ত এটি মিটার নয়)।'}
-function closeBoundary(){if(surveyPoints.length<3){alert('Boundary তৈরির জন্য অন্তত ৩টি পয়েন্ট দরকার।');return;}plotClosed=true;let pts=surveyPoints;let area=0,per=0;for(let i=0;i<pts.length;i++){let a=pts[i],b=pts[(i+1)%pts.length];area+=a.lon*b.lat-b.lon*a.lat;per+=distanceBetween(a,b)}area=Math.abs(area/2);document.getElementById('measureStatus').textContent=`Boundary বন্ধ হয়েছে। পয়েন্ট: ${pts.length} | Perimeter: ${per.toFixed(6)} coordinate unit | Area: ${area.toFixed(8)} square coordinate unit। CRS scale ছাড়া এগুলো মিটার/বর্গমিটার নয়।`;}
-function renderLineRows(){document.getElementById('lineRows').innerHTML=surveyLines.map((l,i)=>`<tr><td>L-${String(i+1).padStart(2,'0')}</td><td>${l.from}</td><td>${l.to}</td><td>${l.distance.toFixed(6)}</td><td>${l.unit}</td></tr>`).join('')}
-function exportSurveyXlsx(){if(!surveyPoints.length){alert('Excel তৈরির আগে পয়েন্ট যোগ করুন।');return;}if(typeof XLSX==='undefined'){alert('Excel লাইব্রেরি লোড হয়নি। ইন্টারনেট সংযোগ দিয়ে আবার চেষ্টা করুন।');return;}let wb=XLSX.utils.book_new();let p=surveyPoints.map(x=>({'Point Number':x.id,'Type':x.type,'Latitude':x.lat,'Longitude':x.lon,'Easting':x.easting,'Northing':x.northing,'GPS Accuracy':x.accuracy,'Date & Time':x.time,'Description':x.desc}));let l=surveyLines.map((x,i)=>({'Line Number':'L-'+(i+1),'Starting Point':x.from,'Ending Point':x.to,'Distance':x.distance,'Unit':x.unit}));let areaInfo=[{'Plot Number':'Plot-01','Total Points':surveyPoints.length,'Perimeter':'CRS scale required','Area':'CRS scale required','Measurement Unit':'Coordinate unit'}];XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(p),'Point Coordinates');XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(l),'Drawing Measurements');XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(areaInfo),'Plot Area');XLSX.writeFile(wb,'Land_Survey_GPS_Point_Report.xlsx');}
-
-render();document.getElementById('drawStatus').textContent='একটি '+tool+' অবজেক্ট যোগ হয়েছে।'});
+canvas.addEventListener('pointerup',e=>{if(!start)return;let p=pos(e);shapes.push({type:tool,x1:start.x,y1:start.y,x2:p.x,y2:p.y});start=null;preview=null;render();document.getElementById('drawStatus').textContent='একটি '+tool+' অবজেক্ট যোগ হয়েছে।'});
 function undo(){shapes.pop();render()}function clearCanvas(){if(confirm('ড্রয়িং পরিষ্কার করবেন?')){shapes=[];render()}}
 function downloadPNG(){let a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='land-survey-drawing.png';a.click()}
 function downloadDXF(){let d='0\nSECTION\n2\nENTITIES\n';shapes.forEach(s=>{if(s.type==='line')d+=`0\nLINE\n8\n0\n10\n${s.x1}\n20\n${s.y1}\n30\n0\n11\n${s.x2}\n21\n${s.y2}\n31\n0\n`;if(s.type==='rect'){[[s.x1,s.y1,s.x2,s.y1],[s.x2,s.y1,s.x2,s.y2],[s.x2,s.y2,s.x1,s.y2],[s.x1,s.y2,s.x1,s.y1]].forEach(v=>d+=`0\nLINE\n8\n0\n10\n${v[0]}\n20\n${v[1]}\n30\n0\n11\n${v[2]}\n21\n${v[3]}\n31\n0\n`)}if(s.type==='circle')d+=`0\nCIRCLE\n8\n0\n10\n${s.x1}\n20\n${s.y1}\n30\n0\n40\n${Math.hypot(s.x2-s.x1,s.y2-s.y1)}\n`;});d+='0\nENDSEC\n0\nEOF\n';download('land-survey-drawing.dxf',d,'application/dxf')}
@@ -286,7 +249,33 @@ function nextPointId(){return 'P-'+String(surveyPoints.length+1).padStart(2,'0')
 function addSurveyPoint(lat,lon,type,accuracy='',desc=''){
  const id=nextPointId();surveyPoints.push({id,type,lat:Number(lat),lon:Number(lon),easting:'',northing:'',accuracy:accuracy||'',time:new Date().toLocaleString(),desc});renderSurveyTables();
 }
-function captureGPS(){const status=document.getElementById('gpsStatus');if(!navigator.geolocation){status.textContent='এই ব্রাউজারে GPS/Geolocation সমর্থিত নয়।';return;}status.textContent='GPS অবস্থান নেওয়া হচ্ছে…';navigator.geolocation.getCurrentPosition(pos=>{addSurveyPoint(pos.coords.latitude,pos.coords.longitude,'Live GPS Point',pos.coords.accuracy,document.getElementById('gpsDesc').value);status.textContent='GPS পয়েন্ট সফলভাবে যোগ হয়েছে। Accuracy: '+Math.round(pos.coords.accuracy)+' m';},e=>{status.textContent='GPS পাওয়া যায়নি: '+e.message+'। HTTPS ও Location permission পরীক্ষা করুন।'},{enableHighAccuracy:true,timeout:20000,maximumAge:0});}
+function gpsFailureMessage(err){
+ if(!window.isSecureContext || !/^https:/i.test(location.protocol)) return 'GPS চালু হয়নি: HTTPS ওয়েবসাইট থেকে খুলুন; ডাউনলোড করা content:// ফাইল থেকে Live GPS পাওয়া যাবে না।';
+ if(err && err.code===0 && err.message==='HTTPS দরকার') return 'এই পেজটি HTTPS ঠিকানা থেকে খুলুন।';
+ if(err && err.code===1) return 'Chrome-এর Location অনুমতি বন্ধ। Android Settings → Apps → Chrome → Permissions → Location → Allow দিন।';
+ if(err && err.code===2) return 'ডিভাইসের অবস্থান পাওয়া যাচ্ছে না। Location চালু করুন, বাইরে/খোলা জায়গায় গিয়ে আবার চেষ্টা করুন।';
+ if(err && err.code===3) return 'GPS পেতে সময় শেষ হয়েছে। Location চালু রেখে আবার চেষ্টা করুন।';
+ return 'GPS পাওয়া যায়নি: '+(err&&err.message?err.message:'অজানা সমস্যা');
+}
+function requestDeviceGPS(onSuccess,onFailure){
+ if(!window.isSecureContext || !/^https:/i.test(location.protocol)){onFailure({code:0,message:'HTTPS দরকার'});return;}
+ if(!navigator.geolocation){onFailure({code:0,message:'এই ব্রাউজারে Geolocation নেই'});return;}
+ let finished=false,watchId=null;
+ const done=(fn,value)=>{if(finished)return;finished=true;if(watchId!==null)navigator.geolocation.clearWatch(watchId);fn(value);};
+ navigator.geolocation.getCurrentPosition(p=>done(onSuccess,p),e=>{
+  if(e.code===1){done(onFailure,e);return;}
+  watchId=navigator.geolocation.watchPosition(p=>done(onSuccess,p),we=>{if(we.code===1||we.code===2)done(onFailure,we);},{enableHighAccuracy:true,maximumAge:0,timeout:90000});
+  setTimeout(()=>done(onFailure,e),95000);
+ },{enableHighAccuracy:true,timeout:60000,maximumAge:0});
+}
+function captureGPS(){
+ const status=document.getElementById('gpsStatus');
+ status.textContent='GPS অবস্থান খোঁজা হচ্ছে… ডিভাইসের Location চালু রেখে ৩০–৬০ সেকেন্ড অপেক্ষা করুন।';
+ requestDeviceGPS(pos=>{
+  const c=pos.coords;addSurveyPoint(c.latitude,c.longitude,'Live GPS Point',c.accuracy,document.getElementById('gpsDesc').value);
+  status.textContent='GPS পয়েন্ট যোগ হয়েছে। Latitude: '+c.latitude.toFixed(7)+' | Longitude: '+c.longitude.toFixed(7)+' | Accuracy: প্রায় '+Math.round(c.accuracy)+' মিটার।';
+ },err=>{status.textContent=gpsFailureMessage(err);});
+}
 function addManualPoint(){let a=document.getElementById('manualLat').value,b=document.getElementById('manualLon').value;if(a===''||b===''){alert('দুটি Coordinate লিখুন।');return;}addSurveyPoint(a,b,document.getElementById('pointType').value,'',document.getElementById('gpsDesc').value);document.getElementById('manualLat').value='';document.getElementById('manualLon').value='';}
 function renderSurveyTables(){let rows=surveyPoints.map((p,i)=>`<tr><td>${p.id}</td><td>${escHTML(p.type)}</td><td>${p.lat}</td><td>${p.lon}</td><td>${p.easting}</td><td>${p.northing}</td><td>${p.accuracy?Number(p.accuracy).toFixed(1)+' m':''}</td><td>${escHTML(p.time)}</td><td>${escHTML(p.desc)}</td><td><button class="secondary" onclick="removeSurveyPoint(${i})">মুছুন</button></td></tr>`).join('');document.getElementById('pointRows').innerHTML=rows;let opts=surveyPoints.map((p,i)=>`<option value="${i}">${p.id}</option>`).join('');document.getElementById('fromPoint').innerHTML=opts;document.getElementById('toPoint').innerHTML=opts;renderLineRows();}
 function removeSurveyPoint(i){surveyPoints.splice(i,1);surveyPoints.forEach((p,j)=>p.id='P-'+String(j+1).padStart(2,'0'));surveyLines=[];renderSurveyTables();}
