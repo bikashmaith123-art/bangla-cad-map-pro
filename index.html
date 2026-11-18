@@ -166,6 +166,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
  <div id="gpsPanel" class="card"><h3>১. GPS Point Survey</h3><div class="row"><div class="field"><label>পয়েন্টের মন্তব্য</label><input id="gpsDesc" placeholder="যেমন: জমির উত্তর-পূর্ব কোণ"></div><div class="field"><label>Point Type</label><select id="pointType"><option>Live GPS Point</option><option>Map Touch Point</option><option>Manual Coordinate Point</option></select></div></div>
  <div class="actions" style="margin-top:10px"><button onclick="captureGPS()">বর্তমান GPS পয়েন্ট নিন</button><button class="secondary" onclick="addManualPoint()">Manual Coordinate Point যোগ করুন</button></div>
  <div class="row" style="margin-top:10px"><div class="field"><label>Latitude / X</label><input id="manualLat" type="number" step="any" placeholder="Latitude অথবা X"></div><div class="field"><label>Longitude / Y</label><input id="manualLon" type="number" step="any" placeholder="Longitude অথবা Y"></div></div>
+<div class="row" style="margin-top:8px"><div class="field"><label>গড় নেওয়ার সময় (সেকেন্ড)</label><input id="gpsAvgSec" type="number" min="3" max="120" value="20"></div><div class="field"><label>সর্বোচ্চ গ্রহণযোগ্য Accuracy (মিটার)</label><input id="gpsMaxAcc" type="number" min="1" max="100" value="10"></div></div>
  <div class="muted" id="gpsStatus">GPS পয়েন্ট নিতে HTTPS সংযোগ ও Location permission প্রয়োজন।</div>
  <div class="scroll"><table><thead><tr><th>Point No.</th><th>Type</th><th>Latitude / X</th><th>Longitude / Y</th><th>Easting</th><th>Northing</th><th>Accuracy</th><th>Date & Time</th><th>Description</th><th>Action</th></tr></thead><tbody id="pointRows"></tbody></table></div></div>
  <div id="coordPanel" class="card"><h3>২. Coordinate Drawing</h3><p class="muted">তালিকা থেকে পয়েন্ট নির্বাচন করে Line/Boundary তৈরি করুন। Map Touch-এর জন্য জিওরেফারেন্সড ম্যাপ সংযুক্ত না থাকলে ক্যানভাসের পয়েন্টগুলো স্থানীয় ড্রয়িং স্থানাঙ্ক হিসেবে থাকবে।</p>
@@ -173,7 +174,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
  <div class="actions" style="margin-top:10px"><button onclick="connectPoints()">পয়েন্ট সংযোগ করুন</button><button class="secondary" onclick="closeBoundary()">Boundary বন্ধ করুন</button><button class="secondary" onclick="exportSurveyXlsx()">Excel Download (৩টি Sheet)</button></div>
  <div id="measureStatus" class="status">পয়েন্ট যোগ করলে দূরত্ব ও ক্ষেত্রফল এখানে দেখাবে।</div><div class="scroll"><table><thead><tr><th>Line No.</th><th>From</th><th>To</th><th>Distance</th><th>Unit</th></tr></thead><tbody id="lineRows"></tbody></table></div>
  <div class="actions"><button class="secondary" onclick="deleteLastPoint()">শেষ পয়েন্ট মুছুন</button><button class="secondary" onclick="clearSurveyPoints()">সব পয়েন্ট মুছুন</button></div></div>
- <div class="status">নোট: Latitude/Longitude থেকে নির্ভরযোগ্য Easting/Northing পেতে সঠিক Coordinate Reference System (CRS) ও Zone নির্বাচন আবশ্যক। এই প্রোটোটাইপে UTM রূপান্তর এখনো সক্রিয় নয়; তাই Easting/Northing ঘর ফাঁকা থাকবে।</div>
+<div class="status">নোট: Latitude/Longitude থেকে স্বয়ংক্রিয়ভাবে UTM (WGS84) Easting/Northing হিসাব হয়; প্রথম পয়েন্টের Zone সব পয়েন্টে ব্যবহৃত হয়। দূরত্ব ও ক্ষেত্রফল মিটার/বর্গমিটারে হিসাব হয়। ভালো ফলের জন্য Accuracy ১০ মিটারের কম রাখুন এবং একই জমির পয়েন্ট একসাথে নিন।</div>
  </div>
 </section>
 <section id="drawing" class="hidden">
@@ -246,9 +247,7 @@ csvfile.addEventListener('change',async e=>{let f=e.target.files[0];if(!f)return
 let surveyPoints=[],surveyLines=[],plotClosed=false;
 function escHTML(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function nextPointId(){return 'P-'+String(surveyPoints.length+1).padStart(2,'0')}
-function addSurveyPoint(lat,lon,type,accuracy='',desc=''){
- const id=nextPointId();surveyPoints.push({id,type,lat:Number(lat),lon:Number(lon),easting:'',northing:'',accuracy:accuracy||'',time:new Date().toLocaleString(),desc});renderSurveyTables();
-}
+
 function gpsFailureMessage(err){
  if(!window.isSecureContext || !/^https:/i.test(location.protocol)) return 'GPS চালু হয়নি: HTTPS ওয়েবসাইট থেকে খুলুন; ডাউনলোড করা content:// ফাইল থেকে Live GPS পাওয়া যাবে না।';
  if(err && err.code===0 && err.message==='HTTPS দরকার') return 'এই পেজটি HTTPS ঠিকানা থেকে খুলুন।';
@@ -268,23 +267,110 @@ function requestDeviceGPS(onSuccess,onFailure){
   setTimeout(()=>done(onFailure,e),95000);
  },{enableHighAccuracy:true,timeout:60000,maximumAge:0});
 }
-function captureGPS(){
- const status=document.getElementById('gpsStatus');
- status.textContent='GPS অবস্থান খোঁজা হচ্ছে… ডিভাইসের Location চালু রেখে ৩০–৬০ সেকেন্ড অপেক্ষা করুন।';
- requestDeviceGPS(pos=>{
-  const c=pos.coords;addSurveyPoint(c.latitude,c.longitude,'Live GPS Point',c.accuracy,document.getElementById('gpsDesc').value);
-  status.textContent='GPS পয়েন্ট যোগ হয়েছে। Latitude: '+c.latitude.toFixed(7)+' | Longitude: '+c.longitude.toFixed(7)+' | Accuracy: প্রায় '+Math.round(c.accuracy)+' মিটার।';
- },err=>{status.textContent=gpsFailureMessage(err);});
-}
+
 function addManualPoint(){let a=document.getElementById('manualLat').value,b=document.getElementById('manualLon').value;if(a===''||b===''){alert('দুটি Coordinate লিখুন।');return;}addSurveyPoint(a,b,document.getElementById('pointType').value,'',document.getElementById('gpsDesc').value);document.getElementById('manualLat').value='';document.getElementById('manualLon').value='';}
-function renderSurveyTables(){let rows=surveyPoints.map((p,i)=>`<tr><td>${p.id}</td><td>${escHTML(p.type)}</td><td>${p.lat}</td><td>${p.lon}</td><td>${p.easting}</td><td>${p.northing}</td><td>${p.accuracy?Number(p.accuracy).toFixed(1)+' m':''}</td><td>${escHTML(p.time)}</td><td>${escHTML(p.desc)}</td><td><button class="secondary" onclick="removeSurveyPoint(${i})">মুছুন</button></td></tr>`).join('');document.getElementById('pointRows').innerHTML=rows;let opts=surveyPoints.map((p,i)=>`<option value="${i}">${p.id}</option>`).join('');document.getElementById('fromPoint').innerHTML=opts;document.getElementById('toPoint').innerHTML=opts;renderLineRows();}
+
+
+/* ===== GPS/মাপ সংশোধন: UTM, মিটার হিসাব, গড় GPS ===== */
+function utmCM(lon){return (Math.floor((lon+180)/6)+1)*6-183}
+function llToUTM(lat,lon,cm){
+ const a=6378137,f=1/298.257223563,k0=0.9996,e2=f*(2-f),ep2=e2/(1-e2),r=Math.PI/180;
+ const p=lat*r,l=lon*r,l0=cm*r,s=Math.sin(p),c=Math.cos(p),t=Math.tan(p);
+ const N=a/Math.sqrt(1-e2*s*s),T=t*t,C=ep2*c*c,A=(l-l0)*c;
+ const M=a*((1-e2/4-3*e2*e2/64-5*e2**3/256)*p-(3*e2/8+3*e2*e2/32+45*e2**3/1024)*Math.sin(2*p)+(15*e2*e2/256+45*e2**3/1024)*Math.sin(4*p)-(35*e2**3/3072)*Math.sin(6*p));
+ const E=k0*N*(A+(1-T+C)*A**3/6+(5-18*T+T*T+72*C-58*ep2)*A**5/120)+500000;
+ const Nn=k0*(M+N*t*(A*A/2+(5-T+9*C+4*C*C)*A**4/24+(61-58*T+T*T+600*C-330*ep2)*A**6/720));
+ return {e:E,n:lat<0?Nn+10000000:Nn};
+}
+function recalcUTM(){
+ if(!surveyPoints.length)return;
+ const cm=utmCM(surveyPoints[0].lon);
+ surveyPoints.forEach(p=>{const u=llToUTM(p.lat,p.lon,cm);p.easting=u.e.toFixed(2);p.northing=u.n.toFixed(2);p.zone=Math.round((cm+183)/6)});
+}
+function addSurveyPoint(lat,lon,type,accuracy='',desc=''){
+ const id=nextPointId();
+ surveyPoints.push({id,type,lat:Number(lat),lon:Number(lon),easting:'',northing:'',accuracy:accuracy||'',time:new Date().toLocaleString(),desc});
+ renderSurveyTables();
+}
+function distanceBetween(a,b){return Math.hypot(Number(b.easting)-Number(a.easting),Number(b.northing)-Number(a.northing))}
+const LEN_F={'Meter':1,'Centimeter':100,'Inch':39.3700787,'Feet':3.2808399,'Link':4.9709695};
+const AREA_F={'Square Meter':1,'Square Feet':10.7639104,'Acre':0.000247105381,'Hectare':0.0001,'Square Centimeter':10000};
+function lenTxt(m){const u=document.getElementById('unit').value;return (m*LEN_F[u]).toFixed(3)+' '+u}
+function areaTxt(m2){const u=document.getElementById('areaunit').value;return (m2*AREA_F[u]).toFixed(3)+' '+u+' ('+(m2/40.4685642).toFixed(3)+' শতক/ডেসিমেল)'}
+function sampleGPS(seconds,maxAcc,onProgress,onDone,onFail){
+ if(!window.isSecureContext||!/^https:/i.test(location.protocol)){onFail({code:0,message:'HTTPS দরকার'});return}
+ if(!navigator.geolocation){onFail({code:0,message:'Geolocation নেই'});return}
+ const fixes=[];let wid=null,t0=Date.now(),timer=null,over=false;
+ const finish=()=>{if(over)return;over=true;clearInterval(timer);if(wid!==null)navigator.geolocation.clearWatch(wid);
+  if(!fixes.length){onFail({code:3});return}
+  const good=fixes.filter(f=>f.acc<=maxAcc);
+  const use=good.length?good:[fixes.reduce((m,f)=>f.acc<m.acc?f:m)];
+  let w=0,la=0,lo=0,ac=0;use.forEach(f=>{const k=1/(Math.max(f.acc,1)**2);w+=k;la+=f.lat*k;lo+=f.lon*k;ac+=f.acc});
+  onDone({lat:la/w,lon:lo/w,acc:ac/use.length,used:use.length,total:fixes.length,ok:good.length>0});};
+ wid=navigator.geolocation.watchPosition(p=>{fixes.push({lat:p.coords.latitude,lon:p.coords.longitude,acc:p.coords.accuracy});},e=>{if(e.code===1||e.code===2){over=true;clearInterval(timer);navigator.geolocation.clearWatch(wid);onFail(e)}},{enableHighAccuracy:true,maximumAge:0,timeout:30000});
+ timer=setInterval(()=>{const s=(Date.now()-t0)/1000;const best=fixes.length?Math.min(...fixes.map(f=>f.acc)):null;onProgress(Math.round(s),fixes.length,best);if(s>=seconds&&fixes.some(f=>f.acc<=maxAcc)||s>=seconds*3)finish()},1000);
+}
+function captureGPS(){
+ const st=document.getElementById('gpsStatus');
+ const sec=Math.max(3,+gpsAvgSec.value||20),max=Math.max(1,+gpsMaxAcc.value||10);
+ st.textContent='GPS গড় নেওয়া হচ্ছে… ফোন স্থির রাখুন।';
+ sampleGPS(sec,max,(s,n,best)=>{st.textContent='GPS গড় নেওয়া হচ্ছে… '+s+' সে. | রিডিং: '+n+' | সেরা Accuracy: '+(best===null?'—':best.toFixed(1)+' মি.')+' (লক্ষ্য ≤ '+max+' মি.)'},
+ r=>{
+  if(!r.ok&&!confirm('Accuracy মাত্র '+r.acc.toFixed(1)+' মিটার (সীমা '+max+' মি.)। এই পয়েন্টে ভুল হতে পারে। তবুও যোগ করবেন?')){st.textContent='পয়েন্ট বাতিল। খোলা জায়গায় গিয়ে আবার চেষ্টা করুন।';return}
+  addSurveyPoint(r.lat,r.lon,'Live GPS Point (গড়)',r.acc,gpsDesc.value);
+  st.textContent='GPS পয়েন্ট যোগ হয়েছে ('+r.used+'/'+r.total+' রিডিং গড় করে)। Lat: '+r.lat.toFixed(7)+' | Lon: '+r.lon.toFixed(7)+' | Accuracy: প্রায় '+r.acc.toFixed(1)+' মিটার।';
+ },err=>{st.textContent=gpsFailureMessage(err)});
+}
+function renderSurveyTables(){
+ recalcUTM();
+ const max=+(document.getElementById('gpsMaxAcc')||{value:10}).value||10;
+ let rows=surveyPoints.map((p,i)=>{const bad=p.accuracy&&Number(p.accuracy)>max;return `<tr><td>${p.id}</td><td>${escHTML(p.type)}</td><td>${p.lat}</td><td>${p.lon}</td><td>${p.easting}</td><td>${p.northing}</td><td style="${bad?'color:#c0392b;font-weight:700':''}">${p.accuracy?Number(p.accuracy).toFixed(1)+' m'+(bad?' ⚠':''):''}</td><td>${escHTML(p.time)}</td><td>${escHTML(p.desc)}</td><td><button class="secondary" onclick="removeSurveyPoint(${i})">মুছুন</button></td></tr>`}).join('');
+ document.getElementById('pointRows').innerHTML=rows;
+ let opts=surveyPoints.map((p,i)=>`<option value="${i}">${p.id}</option>`).join('');
+ document.getElementById('fromPoint').innerHTML=opts;document.getElementById('toPoint').innerHTML=opts;
+ if(surveyPoints.length>1)document.getElementById('toPoint').value=1;
+ renderLineRows();
+}
+function connectPoints(){
+ let a=+fromPoint.value,b=+toPoint.value;
+ if(!surveyPoints[a]||!surveyPoints[b]||a===b){alert('দুটি আলাদা পয়েন্ট নির্বাচন করুন।');return}
+ let p=surveyPoints[a],q=surveyPoints[b],d=distanceBetween(p,q);
+ surveyLines.push({from:p.id,to:q.id,distance:d,unit:'Meter'});renderLineRows();
+ let w=d>5000?' ⚠ দূরত্ব ৫ কিমি-র বেশি — পয়েন্ট দুটি ভিন্ন জায়গার হতে পারে।':'';
+ measureStatus.textContent='দূরত্ব: '+d.toFixed(3)+' মিটার = '+lenTxt(d)+w;
+}
+function polyStats(pts){let ar=0,per=0;for(let i=0;i<pts.length;i++){let a=pts[i],b=pts[(i+1)%pts.length];ar+=Number(a.easting)*Number(b.northing)-Number(b.easting)*Number(a.northing);per+=distanceBetween(a,b)}return{area:Math.abs(ar/2),per}}
+function closeBoundary(){
+ if(surveyPoints.length<3){alert('Boundary তৈরির জন্য অন্তত ৩টি পয়েন্ট দরকার।');return}
+ let far=0;surveyPoints.forEach(p=>surveyPoints.forEach(q=>{far=Math.max(far,distanceBetween(p,q))}));
+ if(far>2000&&!confirm('পয়েন্টগুলোর সবচেয়ে বড় দূরত্ব '+(far/1000).toFixed(2)+' কিমি। মনে হচ্ছে ভিন্ন জমির পয়েন্ট মিশে আছে। তবুও Boundary বন্ধ করবেন?'))return;
+ plotClosed=true;const s=polyStats(surveyPoints);
+ measureStatus.textContent=`Boundary বন্ধ। পয়েন্ট: ${surveyPoints.length} | Perimeter: ${s.per.toFixed(3)} মি. (${lenTxt(s.per)}) | ক্ষেত্রফল: ${s.area.toFixed(3)} বর্গমিটার = ${areaTxt(s.area)} (পয়েন্ট ক্রমানুসারে)`;
+}
+function renderLineRows(){
+ document.getElementById('lineRows').innerHTML=surveyLines.map((l,i)=>`<tr><td>L-${String(i+1).padStart(2,'0')}</td><td>${l.from}</td><td>${l.to}</td><td>${l.distance.toFixed(3)}</td><td>Meter</td></tr>`).join('');
+}
+function exportSurveyXlsx(){
+ if(!surveyPoints.length){alert('Excel তৈরির আগে পয়েন্ট যোগ করুন।');return}
+ if(typeof XLSX==='undefined'){alert('Excel লাইব্রেরি লোড হয়নি। ইন্টারনেট সংযোগ দিয়ে আবার চেষ্টা করুন।');return}
+ recalcUTM();let wb=XLSX.utils.book_new();
+ let p=surveyPoints.map(x=>({'Point Number':x.id,'Type':x.type,'Latitude':x.lat,'Longitude':x.lon,'UTM Zone (N)':x.zone,'Easting (m)':Number(x.easting),'Northing (m)':Number(x.northing),'GPS Accuracy (m)':x.accuracy?Number(Number(x.accuracy).toFixed(1)):'','Date & Time':x.time,'Description':x.desc}));
+ let l=surveyLines.map((x,i)=>({'Line Number':'L-'+(i+1),'Starting Point':x.from,'Ending Point':x.to,'Distance (m)':Number(x.distance.toFixed(3)),'Distance (Feet)':Number((x.distance*LEN_F.Feet).toFixed(3)),'Distance (Link)':Number((x.distance*LEN_F.Link).toFixed(3))}));
+ let ai=[{'Plot Number':'Plot-01','Total Points':surveyPoints.length,'Perimeter (m)':'','Area (Sq m)':'','Area (শতক)':'','Area (Acre)':''}];
+ if(surveyPoints.length>=3){const s=polyStats(surveyPoints);ai[0]['Perimeter (m)']=Number(s.per.toFixed(3));ai[0]['Area (Sq m)']=Number(s.area.toFixed(3));ai[0]['Area (শতক)']=Number((s.area/40.4685642).toFixed(3));ai[0]['Area (Acre)']=Number((s.area*AREA_F.Acre).toFixed(5))}
+ XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(p),'Point Coordinates');
+ XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(l),'Drawing Measurements');
+ XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(ai),'Plot Area');
+ XLSX.writeFile(wb,'Land_Survey_GPS_Point_Report.xlsx');
+}
+
 function removeSurveyPoint(i){surveyPoints.splice(i,1);surveyPoints.forEach((p,j)=>p.id='P-'+String(j+1).padStart(2,'0'));surveyLines=[];renderSurveyTables();}
 function deleteLastPoint(){if(surveyPoints.length)removeSurveyPoint(surveyPoints.length-1)}function clearSurveyPoints(){if(confirm('সব পয়েন্ট মুছবেন?')){surveyPoints=[];surveyLines=[];renderSurveyTables();document.getElementById('measureStatus').textContent='সব পয়েন্ট মুছে ফেলা হয়েছে।'}}
-function distanceBetween(a,b){let dx=b.lon-a.lon,dy=b.lat-a.lat;return Math.hypot(dx,dy)}
-function connectPoints(){let a=+document.getElementById('fromPoint').value,b=+document.getElementById('toPoint').value;if(!surveyPoints[a]||!surveyPoints[b]||a===b){alert('দুটি আলাদা পয়েন্ট নির্বাচন করুন।');return;}let p=surveyPoints[a],q=surveyPoints[b],d=distanceBetween(p,q);surveyLines.push({from:p.id,to:q.id,distance:d,unit:'Coordinate unit'});renderLineRows();document.getElementById('measureStatus').textContent='সংযোগ তৈরি হয়েছে। স্থানাঙ্কের ভিত্তিতে দূরত্ব: '+d.toFixed(6)+' (CRS/scale যাচাই না করা পর্যন্ত এটি মিটার নয়)।'}
-function closeBoundary(){if(surveyPoints.length<3){alert('Boundary তৈরির জন্য অন্তত ৩টি পয়েন্ট দরকার।');return;}plotClosed=true;let pts=surveyPoints;let area=0,per=0;for(let i=0;i<pts.length;i++){let a=pts[i],b=pts[(i+1)%pts.length];area+=a.lon*b.lat-b.lon*a.lat;per+=distanceBetween(a,b)}area=Math.abs(area/2);document.getElementById('measureStatus').textContent=`Boundary বন্ধ হয়েছে। পয়েন্ট: ${pts.length} | Perimeter: ${per.toFixed(6)} coordinate unit | Area: ${area.toFixed(8)} square coordinate unit। CRS scale ছাড়া এগুলো মিটার/বর্গমিটার নয়।`;}
-function renderLineRows(){document.getElementById('lineRows').innerHTML=surveyLines.map((l,i)=>`<tr><td>L-${String(i+1).padStart(2,'0')}</td><td>${l.from}</td><td>${l.to}</td><td>${l.distance.toFixed(6)}</td><td>${l.unit}</td></tr>`).join('')}
-function exportSurveyXlsx(){if(!surveyPoints.length){alert('Excel তৈরির আগে পয়েন্ট যোগ করুন।');return;}if(typeof XLSX==='undefined'){alert('Excel লাইব্রেরি লোড হয়নি। ইন্টারনেট সংযোগ দিয়ে আবার চেষ্টা করুন।');return;}let wb=XLSX.utils.book_new();let p=surveyPoints.map(x=>({'Point Number':x.id,'Type':x.type,'Latitude':x.lat,'Longitude':x.lon,'Easting':x.easting,'Northing':x.northing,'GPS Accuracy':x.accuracy,'Date & Time':x.time,'Description':x.desc}));let l=surveyLines.map((x,i)=>({'Line Number':'L-'+(i+1),'Starting Point':x.from,'Ending Point':x.to,'Distance':x.distance,'Unit':x.unit}));let areaInfo=[{'Plot Number':'Plot-01','Total Points':surveyPoints.length,'Perimeter':'CRS scale required','Area':'CRS scale required','Measurement Unit':'Coordinate unit'}];XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(p),'Point Coordinates');XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(l),'Drawing Measurements');XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(areaInfo),'Plot Area');XLSX.writeFile(wb,'Land_Survey_GPS_Point_Report.xlsx');}
+
+
+
+
+
 
 render();
 </script>
