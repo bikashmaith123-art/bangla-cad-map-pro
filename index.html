@@ -166,7 +166,9 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
  <div id="gpsPanel" class="card"><h3>১. GPS Point Survey</h3><div class="row"><div class="field"><label>পয়েন্টের মন্তব্য</label><input id="gpsDesc" placeholder="যেমন: জমির উত্তর-পূর্ব কোণ"></div><div class="field"><label>Point Type</label><select id="pointType"><option>Live GPS Point</option><option>Map Touch Point</option><option>Manual Coordinate Point</option></select></div></div>
  <div class="actions" style="margin-top:10px"><button onclick="captureGPS()">বর্তমান GPS পয়েন্ট নিন</button><button class="secondary" onclick="addManualPoint()">Manual Coordinate Point যোগ করুন</button></div>
  <div class="row" style="margin-top:10px"><div class="field"><label>Latitude / X</label><input id="manualLat" type="number" step="any" placeholder="Latitude অথবা X"></div><div class="field"><label>Longitude / Y</label><input id="manualLon" type="number" step="any" placeholder="Longitude অথবা Y"></div></div>
-<div class="actions" style="margin-top:8px"><select id="mapUnit" style="max-width:150px" title="ম্যাপে দূরত্বের একক"><option>Feet</option><option>Inch</option><option>Link</option><option>Millimeter</option><option>Centimeter</option><option>Meter</option></select><button class="secondary" onclick="exportCoordXlsx()">📥 Excel Download (Map সহ)</button><button class="secondary" onclick="downloadPlotPNG()">🗺 Map ছবি (PNG)</button><button class="secondary" onclick="document.getElementById('coordFile').click()">📤 Excel থেকে Coordinate আনুন</button><button class="secondary" onclick="downloadCoordTemplate()">Excel Template</button><input type="file" id="coordFile" accept=".xlsx,.xls,.csv" style="display:none" onchange="importCoordFile(this)"></div>
+<div class="actions" style="margin-top:8px"><select id="plotSel" onchange="loadPlot(+this.value)" title="দাগ বাছুন"></select><button onclick="newPlot()">➕ নতুন দাগ</button><button class="secondary" onclick="renamePlot()">✎ নাম</button><button class="secondary" onclick="deletePlot()">🗑 দাগ মুছুন</button></div>
+<div class="actions" style="margin-top:8px"><button class="secondary" onclick="saveProjectFile()">💾 সার্ভে ডেটা সেভ (.json)</button><button class="secondary" onclick="document.getElementById('projFile').click()">📂 সার্ভে ডেটা খুলুন</button><input type="file" id="projFile" accept=".json,application/json" style="display:none" onchange="openProjectFile(this)"></div>
+<div class="actions" style="margin-top:8px"><select id="mapUnit" style="max-width:150px" title="ম্যাপে দূরত্বের একক"><option>Feet</option><option>Inch</option><option>Link</option><option>Millimeter</option><option>Centimeter</option><option>Meter</option></select><button class="secondary" onclick="exportCoordXlsx()">📥 Excel Download (Map সহ)</button><button class="secondary" onclick="downloadPlotPNG()">🗺 Map ছবি (PNG)</button><button class="secondary" onclick="exportKMZ()">🌍 KMZ (Google Earth)</button><button class="secondary" onclick="exportDXF()">📐 DXF (GNA CAD)</button><button class="secondary" onclick="document.getElementById('coordFile').click()">📤 Excel থেকে Coordinate আনুন</button><button class="secondary" onclick="downloadCoordTemplate()">Excel Template</button><input type="file" id="coordFile" accept=".xlsx,.xls,.csv" style="display:none" onchange="importCoordFile(this)"></div>
 <div class="row" style="margin-top:8px"><div class="field"><label>প্রতি পয়েন্টে গড়ের সময় (সর্বোচ্চ ৩০ সেকেন্ড)</label><input id="gpsAvgSec" type="number" min="5" max="30" value="30"></div><div class="field"><label>সর্বোচ্চ গ্রহণযোগ্য Accuracy (মিটার)</label><input id="gpsMaxAcc" type="number" min="0.5" max="100" step="0.5" value="3"></div></div>
  <div class="muted" id="gpsStatus">GPS পয়েন্ট নিতে HTTPS সংযোগ ও Location permission প্রয়োজন।</div>
  <div class="scroll"><table><thead><tr><th>Point No.</th><th>Type</th><th>Latitude / X</th><th>Longitude / Y</th><th>Easting</th><th>Northing</th><th>Accuracy</th><th>Date & Time</th><th>Description</th><th>Action</th></tr></thead><tbody id="pointRows"></tbody></table></div></div>
@@ -197,7 +199,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 </section>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
 // Stage 7 workspace controls: every card can be minimized independently.
 function installPanelMinimizers(){
  document.querySelectorAll('.card').forEach((card,i)=>{
@@ -284,10 +287,10 @@ function llToUTM(lat,lon,cm){
  const Nn=k0*(M+N*t*(A*A/2+(5-T+9*C+4*C*C)*A**4/24+(61-58*T+T*T+600*C-330*ep2)*A**6/720));
  return {e:E,n:lat<0?Nn+10000000:Nn};
 }
+function zoneCM(){for(const pl of plots)if(pl.points.length)return utmCM(pl.points[0].lon);return 87}
 function recalcUTM(){
- if(!surveyPoints.length)return;
- const cm=utmCM(surveyPoints[0].lon);
- surveyPoints.forEach(p=>{const u=llToUTM(p.lat,p.lon,cm);p.easting=u.e.toFixed(2);p.northing=u.n.toFixed(2);p.zone=Math.round((cm+183)/6)});
+ syncPlotOut();const cm=zoneCM();
+ plots.forEach(pl=>pl.points.forEach(p=>{const u=llToUTM(p.lat,p.lon,cm);p.easting=u.e.toFixed(2);p.northing=u.n.toFixed(2);p.zone=Math.round((cm+183)/6)}));
 }
 function addSurveyPoint(lat,lon,type,accuracy='',desc=''){
  const id=nextPointId();
@@ -333,12 +336,12 @@ function captureGPS(){
 function renderSurveyTables(){
  recalcUTM();
  const max=+(document.getElementById('gpsMaxAcc')||{value:10}).value||10;
- let rows=surveyPoints.map((p,i)=>{const bad=p.accuracy&&Number(p.accuracy)>max;return `<tr><td>${p.id}</td><td>${escHTML(p.type)}</td><td>${p.lat}</td><td>${p.lon}</td><td>${p.easting}</td><td>${p.northing}</td><td style="${bad?'color:#c0392b;font-weight:700':''}">${p.accuracy?Number(p.accuracy).toFixed(1)+' m'+(bad?' ⚠':''):''}</td><td>${escHTML(p.time)}</td><td>${escHTML(p.desc)}</td><td><button class="secondary" onclick="removeSurveyPoint(${i})">মুছুন</button></td></tr>`}).join('');
+ let rows=surveyPoints.map((p,i)=>{const bad=p.accuracy&&Number(p.accuracy)>max;return `<tr><td>${p.id}</td><td>${escHTML(p.type)}</td><td>${p.lat}</td><td>${p.lon}</td><td>${p.easting}</td><td>${p.northing}</td><td style="${bad?'color:#c0392b;font-weight:700':''}">${p.accuracy?Number(p.accuracy).toFixed(1)+' m'+(bad?' ⚠':''):''}</td><td>${escHTML(p.time)}</td><td>${escHTML(p.desc)}</td><td style="white-space:nowrap"><button class="secondary" onclick="movePoint(${i},-1)">↑</button> <button class="secondary" onclick="movePoint(${i},1)">↓</button> <button class="secondary" onclick="editPoint(${i})">✎</button> <button class="secondary" onclick="removeSurveyPoint(${i})">মুছুন</button></td></tr>`}).join('');
  document.getElementById('pointRows').innerHTML=rows;
  let opts=surveyPoints.map((p,i)=>`<option value="${i}">${p.id}</option>`).join('');
  document.getElementById('fromPoint').innerHTML=opts;document.getElementById('toPoint').innerHTML=opts;
  if(surveyPoints.length>1)document.getElementById('toPoint').value=1;
- renderLineRows();
+ renderLineRows();renderPlotBar();saveLocal();
 }
 function connectPoints(){
  let a=+fromPoint.value,b=+toPoint.value;
@@ -353,7 +356,7 @@ function closeBoundary(){
  if(surveyPoints.length<3){alert('Boundary তৈরির জন্য অন্তত ৩টি পয়েন্ট দরকার।');return}
  let far=0;surveyPoints.forEach(p=>surveyPoints.forEach(q=>{far=Math.max(far,distanceBetween(p,q))}));
  if(far>2000&&!confirm('পয়েন্টগুলোর সবচেয়ে বড় দূরত্ব '+(far/1000).toFixed(2)+' কিমি। মনে হচ্ছে ভিন্ন জমির পয়েন্ট মিশে আছে। তবুও Boundary বন্ধ করবেন?'))return;
- plotClosed=true;const s=polyStats(surveyPoints);
+ plotClosed=true;saveLocal();const s=polyStats(surveyPoints);
  measureStatus.textContent=`Boundary বন্ধ। পয়েন্ট: ${surveyPoints.length} | Perimeter: ${s.per.toFixed(3)} মি. (${lenTxt(s.per)}) | ক্ষেত্রফল: ${s.area.toFixed(3)} বর্গমিটার = ${areaTxt(s.area)} (পয়েন্ট ক্রমানুসারে)`;
 }
 function renderLineRows(){
@@ -408,77 +411,156 @@ function importCoordFile(inp){
  rd.readAsArrayBuffer(f);
 }
 
-/* ===== Plot Map ছবি + Excel (ম্যাপ সহ) ===== */
+/* ===== দাগ (Plot) ব্যবস্থাপনা, অটো-সেভ, প্রজেক্ট ফাইল ===== */
+let plots=[{name:'দাগ-01',points:surveyPoints,lines:surveyLines,closed:false}],curPlot=0;
+const LS_KEY='lscad_project_v1';
+function syncPlotOut(){const c=plots[curPlot];if(c){c.points=surveyPoints;c.lines=surveyLines;c.closed=plotClosed}}
+function renderPlotBar(){const el=document.getElementById('plotSel');if(!el)return;syncPlotOut();el.innerHTML=plots.map((pl,i)=>`<option value="${i}"${i===curPlot?' selected':''}>${escHTML(pl.name)} (${pl.points.length} পয়েন্ট)</option>`).join('')}
+function loadPlot(i){syncPlotOut();curPlot=i;const pl=plots[i];surveyPoints=pl.points;surveyLines=pl.lines;plotClosed=pl.closed;renderSurveyTables();measureStatus.textContent='দাগ: '+pl.name}
+function newPlot(){syncPlotOut();const nm=prompt('নতুন দাগের নাম/নম্বর:','দাগ-'+String(plots.length+1).padStart(2,'0'));if(!nm)return;plots.push({name:nm,points:[],lines:[],closed:false});loadPlot(plots.length-1)}
+function renamePlot(){const nm=prompt('দাগের নতুন নাম:',plots[curPlot].name);if(!nm)return;plots[curPlot].name=nm;renderSurveyTables()}
+function deletePlot(){if(!confirm('"'+plots[curPlot].name+'" দাগ ও তার সব পয়েন্ট মুছবেন?'))return;
+ if(plots.length===1){surveyPoints=[];surveyLines=[];plotClosed=false;plots[0]={name:plots[0].name,points:surveyPoints,lines:surveyLines,closed:false};renderSurveyTables();return}
+ plots.splice(curPlot,1);curPlot=Math.max(0,curPlot-1);const pl=plots[curPlot];surveyPoints=pl.points;surveyLines=pl.lines;plotClosed=pl.closed;renderSurveyTables()}
+function saveLocal(){try{syncPlotOut();localStorage.setItem(LS_KEY,JSON.stringify({v:1,plots,curPlot}))}catch(e){}}
+function applyProject(d){
+ if(!d||!Array.isArray(d.plots)||!d.plots.length)throw new Error('প্রজেক্ট ফাইল ঠিক নেই');
+ plots=d.plots.map((x,i)=>({name:x.name||'দাগ-'+(i+1),points:Array.isArray(x.points)?x.points:[],lines:Array.isArray(x.lines)?x.lines:[],closed:!!x.closed}));
+ curPlot=Math.min(d.curPlot||0,plots.length-1);const pl=plots[curPlot];surveyPoints=pl.points;surveyLines=pl.lines;plotClosed=pl.closed;renderSurveyTables();
+}
+function saveProjectFile(){syncPlotOut();download('Land_Survey_Project.json',JSON.stringify({v:1,plots,curPlot},null,1),'application/json');gpsStatus.textContent='সার্ভে ডেটা ফাইল (JSON) নামানো হয়েছে। পরে "সার্ভে ডেটা খুলুন" দিয়ে আবার খুলতে পারবেন।'}
+function openProjectFile(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{try{applyProject(JSON.parse(e.target.result));gpsStatus.textContent='সার্ভে ডেটা খোলা হয়েছে: '+plots.length+'টি দাগ।'}catch(er){gpsStatus.textContent='সার্ভে ডেটা খোলা যায়নি: '+er.message}inp.value=''};r.readAsText(f)}
+function movePoint(i,d){const j=i+d;if(j<0||j>=surveyPoints.length)return;[surveyPoints[i],surveyPoints[j]]=[surveyPoints[j],surveyPoints[i]];surveyPoints.forEach((p,k)=>p.id='P-'+String(k+1).padStart(2,'0'));surveyLines=[];renderSurveyTables()}
+function editPoint(i){const q=surveyPoints[i];const la=prompt('Latitude ('+q.id+'):',q.lat);if(la===null)return;const lo=prompt('Longitude ('+q.id+'):',q.lon);if(lo===null)return;
+ if(!isFinite(+la)||!isFinite(+lo)||Math.abs(+la)>90||Math.abs(+lo)>180){alert('ভুল Coordinate।');return}q.lat=+la;q.lon=+lo;q.type='Edited Point';q.accuracy='';surveyLines=[];renderSurveyTables()}
+
+/* ===== Plot Map ছবি + Excel + KMZ + DXF ===== */
 function fmtLen(m,u){const v=m*LEN_F[u];const d={'Meter':3,'Millimeter':0,'Centimeter':1,'Inch':2,'Feet':2,'Link':2}[u];const ab={'Meter':'m','Millimeter':'mm','Centimeter':'cm','Inch':'in','Feet':'ft','Link':'lk'}[u];return v.toFixed(d)+' '+ab}
-function plotSides(){const P=surveyPoints,o=[];for(let i=0;i<P.length-1;i++)o.push([P[i],P[i+1]]);if(plotClosed&&P.length>=3)o.push([P[P.length-1],P[0]]);return o}
-function drawPlotCanvas(u){
- recalcUTM();const W=1600,H=1200,M=170,cv=document.createElement('canvas');cv.width=W;cv.height=H;const c=cv.getContext('2d');
+function sidesOf(P,closed){const o=[];for(let i=0;i<P.length-1;i++)o.push([P[i],P[i+1]]);if(closed&&P.length>=3)o.push([P[P.length-1],P[0]]);return o}
+function drawPlotCanvas(u,pl){
+ recalcUTM();pl=pl||{name:plots[curPlot].name,points:surveyPoints,closed:plotClosed};
+ const W=1600,H=1200,M=170,cv=document.createElement('canvas');cv.width=W;cv.height=H;const c=cv.getContext('2d');
  c.fillStyle='#fff';c.fillRect(0,0,W,H);
- const P=surveyPoints;if(!P.length)return cv;
+ const P=pl.points;if(!P.length)return cv;
  const E=P.map(p=>+p.easting),N=P.map(p=>+p.northing);
  const minE=Math.min(...E),maxE=Math.max(...E),minN=Math.min(...N),maxN=Math.max(...N);
  const sp=Math.max(maxE-minE,0.5),sn=Math.max(maxN-minN,0.5);
  const sc=Math.min((W-2*M)/sp,(H-2*M-40)/sn),ox=(W-sp*sc)/2,oy=(H+40-sn*sc)/2;
  const X=e=>ox+(e-minE)*sc,Y=n=>H-oy-(n-minN)*sc;
- const closed=plotClosed&&P.length>=3;
+ const closed=pl.closed&&P.length>=3,sides=sidesOf(P,pl.closed);
  if(closed){c.beginPath();P.forEach((p,i)=>{const x=X(+p.easting),y=Y(+p.northing);i?c.lineTo(x,y):c.moveTo(x,y)});c.closePath();c.fillStyle='rgba(24,62,97,0.08)';c.fill()}
  c.lineWidth=3;c.strokeStyle='#183e61';c.lineJoin='round';
- plotSides().forEach(([a,b])=>{c.beginPath();c.moveTo(X(+a.easting),Y(+a.northing));c.lineTo(X(+b.easting),Y(+b.northing));c.stroke()});
+ sides.forEach(([a,b])=>{c.beginPath();c.moveTo(X(+a.easting),Y(+a.northing));c.lineTo(X(+b.easting),Y(+b.northing));c.stroke()});
  c.textAlign='center';c.textBaseline='middle';c.font='bold 24px sans-serif';
- plotSides().forEach(([a,b])=>{
+ sides.forEach(([a,b])=>{
   const x1=X(+a.easting),y1=Y(+a.northing),x2=X(+b.easting),y2=Y(+b.northing);
   let ang=Math.atan2(y2-y1,x2-x1);if(ang>Math.PI/2||ang<-Math.PI/2)ang+=Math.PI;
   c.save();c.translate((x1+x2)/2,(y1+y2)/2);c.rotate(ang);
   const t=fmtLen(distanceBetween(a,b),u);c.lineWidth=7;c.strokeStyle='#fff';c.strokeText(t,0,-16);c.fillStyle='#b03a00';c.fillText(t,0,-16);c.restore();
  });
- c.textAlign='left';const ce=E.reduce((a,b)=>a+b,0)/E.length,cn=N.reduce((a,b)=>a+b,0)/N.length;
+ const ce=E.reduce((a,b)=>a+b,0)/E.length,cn=N.reduce((a,b)=>a+b,0)/N.length;
  P.forEach(p=>{const x=X(+p.easting),y=Y(+p.northing);c.beginPath();c.arc(x,y,9,0,7);c.fillStyle='#c0392b';c.fill();c.lineWidth=3;c.strokeStyle='#fff';c.stroke();
   c.font='bold 28px sans-serif';c.textAlign='center';let dx=x-X(ce),dy=y-Y(cn),dl=Math.hypot(dx,dy)||1;const lx=x+dx/dl*38,ly=y+dy/dl*30;c.lineWidth=6;c.strokeStyle='#fff';c.strokeText(p.id,lx,ly);c.fillStyle='#111';c.fillText(p.id,lx,ly)});
- if(closed){const st=polyStats(P);c.textAlign='center';c.font='bold 30px sans-serif';const cx=X(E.reduce((a,b)=>a+b,0)/E.length),cy=Y(N.reduce((a,b)=>a+b,0)/N.length);
-  c.lineWidth=7;c.strokeStyle='#fff';const t1=st.area.toFixed(2)+' sq m',t2=(st.area/40.4685642).toFixed(3)+' শতক';
-  c.strokeText(t1,cx,cy-6);c.fillStyle='#145a32';c.fillText(t1,cx,cy-6);c.strokeText(t2,cx,cy+30);c.fillText(t2,cx,cy+30)}
+ if(closed){const st=polyStats(P);c.textAlign='center';c.font='bold 30px sans-serif';const cx=X(ce),cy=Y(cn);
+  c.lineWidth=7;c.strokeStyle='#fff';c.fillStyle='#145a32';const t1=st.area.toFixed(2)+' sq m',t2=(st.area/40.4685642).toFixed(3)+' শতক';
+  c.strokeText(t1,cx,cy-6);c.fillText(t1,cx,cy-6);c.strokeText(t2,cx,cy+30);c.fillText(t2,cx,cy+30)}
  c.textAlign='left';c.fillStyle='#183e61';c.font='bold 34px sans-serif';
- c.fillText((document.getElementById('pname')&&pname.value?pname.value+' — ':'')+'Plot Map',40,60);
+ c.fillText((document.getElementById('pname')&&pname.value?pname.value+' — ':'')+pl.name,40,60);
  c.font='24px sans-serif';c.fillStyle='#555';c.fillText('Distance unit: '+u+'  |  UTM Zone '+(P[0].zone||'')+'N (WGS84)',40,100);
- /* North arrow */
  c.beginPath();c.moveTo(W-90,150);c.lineTo(W-110,205);c.lineTo(W-90,192);c.lineTo(W-70,205);c.closePath();c.fillStyle='#183e61';c.fill();c.font='bold 28px sans-serif';c.textAlign='center';c.fillText('N',W-90,125);
- /* Scale bar */
  let m=170/sc,pw=Math.pow(10,Math.floor(Math.log10(m))),nice=[1,2,5,10].map(k=>k*pw).filter(v=>v<=m).pop()||pw;
  const bx=60,by=H-60;c.fillStyle='#000';c.fillRect(bx,by,nice*sc,6);c.fillRect(bx,by-10,3,16);c.fillRect(bx+nice*sc-3,by-10,3,16);c.textAlign='left';c.font='22px sans-serif';c.fillText(nice+' m',bx,by-18);
  return cv;
 }
 function downloadPlotPNG(){
  if(!surveyPoints.length){alert('আগে পয়েন্ট যোগ করুন।');return}
- const cv=drawPlotCanvas(mapUnit.value);const a=document.createElement('a');a.href=cv.toDataURL('image/png');a.download='Plot_Map.png';a.click();
+ const cv=drawPlotCanvas(mapUnit.value);const a=document.createElement('a');a.href=cv.toDataURL('image/png');a.download='Plot_Map_'+plots[curPlot].name.replace(/[^\w\u0980-\u09ff-]+/g,'_')+'.png';a.click();
 }
+function filledPlots(){recalcUTM();return plots.filter(pl=>pl.points.length)}
 async function exportFullExcel(){
- if(!surveyPoints.length){alert('Excel তৈরির আগে পয়েন্ট যোগ করুন।');return}
- recalcUTM();const u=mapUnit.value,sides=plotSides(),P=surveyPoints;
- const ptRows=P.map(x=>[x.id,x.type,x.lat,x.lon,x.zone,Number(x.easting),Number(x.northing),x.accuracy?Number(Number(x.accuracy).toFixed(1)):'',x.time,x.desc]);
- const ptHead=['Point Number','Type','Latitude','Longitude','UTM Zone (N)','Easting (m)','Northing (m)','GPS Accuracy (m)','Date & Time','Description'];
- const dRows=sides.map(([a,b],i)=>{const d=distanceBetween(a,b);return ['L-'+String(i+1).padStart(2,'0'),a.id,b.id,Number((d*LEN_F[u]).toFixed(3)),Number(d.toFixed(3))]});
- const dHead=['Line Number','From','To','Distance ('+u+')','Distance (Meter)'];
- let aHead=['Plot','Total Points','Perimeter (m)','Area (Sq m)','Area (শতক)','Area (Acre)'],aRow=['Plot-01',P.length,'','','',''];
- if(P.length>=3){const st=polyStats(P);aRow=['Plot-01',P.length,Number(st.per.toFixed(3)),Number(st.area.toFixed(3)),Number((st.area/40.4685642).toFixed(3)),Number((st.area*AREA_F.Acre).toFixed(5))]}
+ const PL=filledPlots();if(!PL.length){alert('Excel তৈরির আগে পয়েন্ট যোগ করুন।');return}
+ const u=mapUnit.value;
+ const ptHead=['Plot','Point Number','Type','Latitude','Longitude','UTM Zone (N)','Easting (m)','Northing (m)','GPS Accuracy (m)','Date & Time','Description'];
+ const ptRows=[],dRows=[],aRows=[];
+ PL.forEach(pl=>{pl.points.forEach(x=>ptRows.push([pl.name,x.id,x.type,x.lat,x.lon,x.zone,Number(x.easting),Number(x.northing),x.accuracy?Number(Number(x.accuracy).toFixed(1)):'',x.time,x.desc]));
+  sidesOf(pl.points,pl.closed).forEach(([a,b],i)=>{const d=distanceBetween(a,b);dRows.push([pl.name,'L-'+String(i+1).padStart(2,'0'),a.id,b.id,Number((d*LEN_F[u]).toFixed(3)),Number(d.toFixed(3))])});
+  let r=[pl.name,pl.points.length,pl.closed?'হ্যাঁ':'না','','','',''];if(pl.points.length>=3){const st=polyStats(pl.points);r=[pl.name,pl.points.length,pl.closed?'হ্যাঁ':'না',Number(st.per.toFixed(3)),Number(st.area.toFixed(3)),Number((st.area/40.4685642).toFixed(3)),Number((st.area*AREA_F.Acre).toFixed(5))]}aRows.push(r)});
+ const dHead=['Plot','Line Number','From','To','Distance ('+u+')','Distance (Meter)'];
+ const aHead=['Plot','Total Points','Boundary বন্ধ','Perimeter (m)','Area (Sq m)','Area (শতক)','Area (Acre)'];
  const st=document.getElementById('gpsStatus');
  if(typeof ExcelJS==='undefined'){
   if(typeof XLSX==='undefined'){alert('Excel লাইব্রেরি লোড হয়নি। ইন্টারনেট চালু করে পেজ রিফ্রেশ করুন।');return}
-  const wb=XLSX.utils.book_new();[['Point Coordinates',ptHead,ptRows],['Drawing Measurements',dHead,dRows],['Plot Area',aHead,[aRow]]].forEach(([n,h,r])=>XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([h,...r]),n));
+  const wb=XLSX.utils.book_new();[['Point Coordinates',ptHead,ptRows],['Drawing Measurements',dHead,dRows],['Plot Area',aHead,aRows]].forEach(([n,h,r])=>XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([h,...r]),n));
   XLSX.writeFile(wb,'Land_Survey_Report.xlsx');st.textContent='ছবি যোগ করার লাইব্রেরি (ExcelJS) লোড হয়নি, তাই ম্যাপ ছাড়া Excel নামানো হয়েছে। "Map ছবি (PNG)" বোতামে আলাদা ছবি পাবেন।';return}
  const wb=new ExcelJS.Workbook();
  const add=(name,head,rows,widths)=>{const ws=wb.addWorksheet(name);ws.addRow(head).font={bold:true};rows.forEach(r=>ws.addRow(r));widths.forEach((w,i)=>ws.getColumn(i+1).width=w);return ws};
- add('Point Coordinates',ptHead,ptRows,[14,22,14,14,12,14,14,16,22,26]);
- add('Drawing Measurements',dHead,dRows,[14,10,10,20,18]);
- add('Plot Area',aHead,[aRow],[12,12,16,16,16,16]);
- const wm=wb.addWorksheet('Plot Map');wm.getCell('A1').value='Plot Map — দূরত্বের একক: '+u+(plotClosed?'':' (Boundary বন্ধ করা হয়নি)');wm.getCell('A1').font={bold:true,size:13};
- const cv=drawPlotCanvas(u);const id=wb.addImage({base64:cv.toDataURL('image/png'),extension:'png'});
- wm.addImage(id,{tl:{col:0,row:2},ext:{width:1000,height:750}});
+ add('Point Coordinates',ptHead,ptRows,[14,12,22,14,14,12,14,14,16,22,26]);
+ add('Drawing Measurements',dHead,dRows,[14,12,10,10,20,18]);
+ add('Plot Area',aHead,aRows,[14,12,14,16,16,16,16]);
+ PL.forEach((pl,i)=>{const nm=('Map'+(i+1)+'-'+pl.name).replace(/[\\\/\?\*\[\]:]/g,'_').slice(0,31);const wm=wb.addWorksheet(nm);
+  wm.getCell('A1').value=pl.name+' — দূরত্বের একক: '+u+(pl.closed?'':' (Boundary বন্ধ করা হয়নি)');wm.getCell('A1').font={bold:true,size:13};
+  const id=wb.addImage({base64:drawPlotCanvas(u,pl).toDataURL('image/png'),extension:'png'});wm.addImage(id,{tl:{col:0,row:2},ext:{width:1000,height:750}})});
  const buf=await wb.xlsx.writeBuffer();
  download('Land_Survey_Report.xlsx',buf,'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
- st.textContent='Excel নামানো হয়েছে — "Plot Map" শিটে ছবি, দূরত্ব '+u+' এককে।';
+ st.textContent='Excel নামানো হয়েছে — '+PL.length+'টি দাগ, প্রতিটির আলাদা Map শিট, দূরত্ব '+u+' এককে।';
 }
 function exportSurveyXlsx(){exportFullExcel()}
 function exportCoordXlsx(){exportFullExcel()}
+
+/* ---- KML / KMZ (Google Earth) ---- */
+const xe=t=>String(t??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function buildKML(){
+ const PL=filledPlots();let k='<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>'+xe((document.getElementById('pname')&&pname.value)||'Land Survey')+'</name>\n<Style id="ln"><LineStyle><color>ff611e18</color><width>3</width></LineStyle><PolyStyle><color>4d611e18</color></PolyStyle></Style>\n';
+ PL.forEach(pl=>{const P=pl.points,co=P.map(p=>p.lon+','+p.lat+',0');k+='<Folder><name>'+xe(pl.name)+'</name>\n';
+  if(P.length>=3&&pl.closed)k+='<Placemark><name>'+xe(pl.name)+'</name><styleUrl>#ln</styleUrl><Polygon><outerBoundaryIs><LinearRing><coordinates>'+co.concat(co[0]).join(' ')+'</coordinates></LinearRing></outerBoundaryIs></Polygon></Placemark>\n';
+  else if(P.length>=2)k+='<Placemark><name>'+xe(pl.name)+'</name><styleUrl>#ln</styleUrl><LineString><coordinates>'+co.join(' ')+'</coordinates></LineString></Placemark>\n';
+  P.forEach(p=>{k+='<Placemark><name>'+xe(p.id)+'</name><description>'+xe((p.desc||'')+(p.accuracy?' | Accuracy '+Number(p.accuracy).toFixed(1)+' m':''))+'</description><Point><coordinates>'+p.lon+','+p.lat+',0</coordinates></Point></Placemark>\n'});
+  k+='</Folder>\n'});
+ return k+'</Document></kml>';
+}
+function crc32(b){let T=crc32.T;if(!T){T=crc32.T=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let j=0;j<8;j++)c=c&1?0xEDB88320^(c>>>1):c>>>1;T[n]=c>>>0}}let c=0xFFFFFFFF;for(let i=0;i<b.length;i++)c=T[(c^b[i])&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0}
+function zipStore(files){const enc=new TextEncoder(),d=new Date(),dt=((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate(),tm=(d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1);
+ const parts=[],cd=[];let off=0;
+ files.forEach(f=>{const nm=enc.encode(f.name),data=f.data,crc=crc32(data);
+  const h=new DataView(new ArrayBuffer(30));h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x0800,true);h.setUint16(8,0,true);h.setUint16(10,tm,true);h.setUint16(12,dt,true);h.setUint32(14,crc,true);h.setUint32(18,data.length,true);h.setUint32(22,data.length,true);h.setUint16(26,nm.length,true);h.setUint16(28,0,true);
+  parts.push(new Uint8Array(h.buffer),nm,data);
+  const c=new DataView(new ArrayBuffer(46));c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(8,0x0800,true);c.setUint16(10,0,true);c.setUint16(12,tm,true);c.setUint16(14,dt,true);c.setUint32(16,crc,true);c.setUint32(20,data.length,true);c.setUint32(24,data.length,true);c.setUint16(28,nm.length,true);c.setUint32(42,off,true);
+  cd.push(new Uint8Array(c.buffer),nm);off+=30+nm.length+data.length});
+ const cs=cd.reduce((a,b)=>a+b.length,0),e=new DataView(new ArrayBuffer(22));e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);e.setUint32(12,cs,true);e.setUint32(16,off,true);
+ return new Blob([...parts,...cd,new Uint8Array(e.buffer)],{type:'application/vnd.google-earth.kmz'})}
+function exportKMZ(){
+ if(!filledPlots().length){alert('আগে পয়েন্ট যোগ করুন।');return}
+ download('Land_Survey.kmz',zipStore([{name:'doc.kml',data:new TextEncoder().encode(buildKML())}]),'application/vnd.google-earth.kmz');
+ gpsStatus.textContent='KMZ নামানো হয়েছে — Google Earth Pro-তে খুলুন।';
+}
+/* ---- DXF (GNA CAD) : মিটার, স্থানীয় origin ---- */
+function buildDXF(u){
+ const PL=filledPlots();const all=PL.flatMap(pl=>pl.points);
+ const ox=Math.min(...all.map(p=>+p.easting)),oy=Math.min(...all.map(p=>+p.northing));
+ const span=Math.max(Math.max(...all.map(p=>+p.easting))-ox,Math.max(...all.map(p=>+p.northing))-oy,1),th=Math.max(span/60,0.15);
+ const o=[];const w=(c,v)=>o.push(String(c),String(v));const f=v=>(+v).toFixed(4);
+ const asc=t=>String(t).replace(/[^\x20-\x7e]/g,'').trim();
+ w(0,'SECTION');w(2,'HEADER');w(9,'$ACADVER');w(1,'AC1009');w(0,'ENDSEC');
+ w(0,'SECTION');w(2,'TABLES');w(0,'TABLE');w(2,'LTYPE');w(70,1);w(0,'LTYPE');w(2,'CONTINUOUS');w(70,0);w(3,'Solid line');w(72,65);w(73,0);w(40,0);w(0,'ENDTAB');
+ w(0,'TABLE');w(2,'LAYER');w(70,4);[['BOUNDARY',5],['POINTS',1],['LABELS',7],['DIST',3]].forEach(([n,c])=>{w(0,'LAYER');w(2,n);w(70,0);w(62,c);w(6,'CONTINUOUS')});w(0,'ENDTAB');w(0,'ENDSEC');
+ w(0,'SECTION');w(2,'ENTITIES');
+ const text=(layer,x,y,h,t,rot)=>{w(0,'TEXT');w(8,layer);w(10,f(x));w(20,f(y));w(30,0);w(40,f(h));w(1,t);w(50,f(rot||0));w(72,1);w(11,f(x));w(21,f(y));w(31,0);w(73,2)};
+ PL.forEach((pl,pi)=>{const P=pl.points,X=p=>+p.easting-ox,Y=p=>+p.northing-oy;
+  sidesOf(P,pl.closed).forEach(([a,b])=>{w(0,'LINE');w(8,'BOUNDARY');w(10,f(X(a)));w(20,f(Y(a)));w(30,0);w(11,f(X(b)));w(21,f(Y(b)));w(31,0);
+   let ang=Math.atan2(Y(b)-Y(a),X(b)-X(a))*180/Math.PI;if(ang>90||ang<-90)ang+=180;
+   text('DIST',(X(a)+X(b))/2,(Y(a)+Y(b))/2+th*0.9,th*0.8,fmtLen(distanceBetween(a,b),u),ang)});
+  P.forEach(p=>{w(0,'CIRCLE');w(8,'POINTS');w(10,f(X(p)));w(20,f(Y(p)));w(30,0);w(40,f(th*0.3));text('LABELS',X(p)+th*1.6,Y(p)+th*1.2,th,p.id,0)});
+  const cx=P.reduce((a,p)=>a+X(p),0)/P.length,cy=P.reduce((a,p)=>a+Y(p),0)/P.length;
+  let lab=/^[\x20-\x7e]+$/.test(pl.name)?pl.name.trim():('Plot-'+(pi+1));if(P.length>=3){const st=polyStats(P);lab+='  '+st.area.toFixed(2)+' sq m ('+(st.area/40.4685642).toFixed(3)+' Shatak)'}
+  text('LABELS',cx,cy,th*1.1,lab,0)});
+ w(0,'ENDSEC');w(0,'EOF');return o.join('\n')+'\n';
+}
+function exportDXF(){
+ if(!filledPlots().length){alert('আগে পয়েন্ট যোগ করুন।');return}
+ download('Land_Survey.dxf',buildDXF(mapUnit.value),'application/dxf');
+ gpsStatus.textContent='DXF নামানো হয়েছে — GNA CAD-এ খুলুন (ড্রয়িং মিটারে, প্রথম কোণ থেকে মাপা)। দূরত্ব লেখা '+mapUnit.value+' এককে।';
+}
+setTimeout(()=>{try{const d=JSON.parse(localStorage.getItem(LS_KEY)||'null');if(d&&d.plots&&d.plots.some(x=>x.points&&x.points.length)){applyProject(d);gpsStatus.textContent='আগের কাজ ফিরিয়ে আনা হয়েছে ('+plots.length+'টি দাগ)।'}else renderSurveyTables()}catch(e){renderSurveyTables()}},0);
 function removeSurveyPoint(i){plotClosed=false;surveyPoints.splice(i,1);surveyPoints.forEach((p,j)=>p.id='P-'+String(j+1).padStart(2,'0'));surveyLines=[];renderSurveyTables();}
 function deleteLastPoint(){if(surveyPoints.length)removeSurveyPoint(surveyPoints.length-1)}function clearSurveyPoints(){if(confirm('সব পয়েন্ট মুছবেন?')){surveyPoints=[];surveyLines=[];renderSurveyTables();document.getElementById('measureStatus').textContent='সব পয়েন্ট মুছে ফেলা হয়েছে।'}}
 
