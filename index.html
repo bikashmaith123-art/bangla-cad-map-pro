@@ -134,7 +134,15 @@ $('go').onclick = async ()=>{
   try{
     audio=audio||new (window.AudioContext||window.webkitAudioContext)();
     gl=$('gl').getContext('webgl',{xrCompatible:true});
-    session=await navigator.xr.requestSession('immersive-ar',{optionalFeatures:['dom-overlay'],domOverlay:{root:$('hud')}});
+    overlayMode=true;autoT=null;
+    try{
+      session=await navigator.xr.requestSession('immersive-ar',{optionalFeatures:['dom-overlay'],domOverlay:{root:$('hud')}});
+    }catch(e1){
+      // some devices reject the overlay option: retry plain AR (no on-screen buttons)
+      overlayMode=false;
+      session=await navigator.xr.requestSession('immersive-ar');
+      session.addEventListener('select',()=>session&&session.end());
+    }
     session.updateRenderState({baseLayer:new XRWebGLLayer(session,gl)});
     ref=await session.requestReferenceSpace('local');
     session.addEventListener('end',onEnd);
@@ -149,7 +157,7 @@ $('stop').onclick=()=>session&&session.end();
 $('vib').onchange=()=>setVib($('vib').checked);
 $('vibBtn').onclick=()=>setVib(!vibOn);
 
-let cur=null, good=false;
+let cur=null, good=false, overlayMode=true, autoT=null;
 $('mark').onclick=()=>{
   if(!cur||!good) return;
   started=true; last={x:cur.x,y:cur.y,z:cur.z};
@@ -176,10 +184,16 @@ function onFrame(t,frame){
   const pose=frame.getViewerPose(ref);
   const st=$('st');
   if(!pose||pose.emulatedPosition){
-    good=false;st.textContent='ট্র্যাকিং হারিয়েছে। ফোন ধীরে নাড়ান, মাটির দাগযুক্ত জায়গায় তাক করুন।';st.className='bad';return;
+    good=false;autoT=null;st.textContent='ট্র্যাকিং হারিয়েছে। ফোন ধীরে নাড়ান, মাটির দাগযুক্ত জায়গায় তাক করুন।';st.className='bad';return;
   }
   good=true;st.textContent='ট্র্যাকিং ঠিক আছে';st.className='';
   const p=pose.transform.position;cur={x:p.x,y:p.y,z:p.z};
+  if(!started && !overlayMode){
+    // no on-screen button: start automatically after 3 s of steady tracking
+    if(autoT===null) autoT=t;
+    if(t-autoT>3000){started=true;last={x:cur.x,y:cur.y,z:cur.z};addPoint(last,0);beep();setTimeout(beep,200);}
+    return;
+  }
   if(!started) return;
   const step=stepFt*M_PER_FT;
   let d=dist(last,cur),guard=0;
